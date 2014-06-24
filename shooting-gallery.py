@@ -4,24 +4,47 @@
 Hra střelnice
 """
 
-# import pygame
+import pygame
 import argparse
 import ConfigParser
 import sys
 
 
-def init():
-    """
-    Init function
-    """
+class ShootingGallery():
+
+    def __init__(self):
+        """
+        Inicializační funkce. Volá se jen jednou na začátku.
+        """
+        pass
+
+    def tick(self):
+        """
+        Tato funkce se vykonává opakovaně
+        """
+        pass
+
+    def run(self):
+        """
+        funkce opakovaně volá funkci tick
+        """
+        #  Ošetření vstupních událostí
+        for udalost in pygame.event.get():
+            if udalost.type == pygame.locals.QUIT:
+                return
+            elif (udalost.type == pygame.locals.KEYDOWN and
+                  udalost.key == pygame.locals.K_ESCAPE):
+                return
+        casovac = pygame.time.Clock()
+        while 1:
+            casovac.tick(20)
+            self.tick()
 
 
-def tick():
-    """
-    Tato funkce se vykonává opakovaně
-    """
-
-
+def main():
+    args = get_params()
+    sh = ShootingGallery()
+    sh.run()
 
 
 def get_params(argv=None):
@@ -44,7 +67,7 @@ def get_params(argv=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         # Turn off help, so we print all options in response to -h
         add_help=False
-        )
+    )
     conf_parser.add_argument("-c", "--conf_file",
                              help="Specify config file", metavar="FILE",
                              default='config')
@@ -62,7 +85,7 @@ def get_params(argv=None):
     parser = argparse.ArgumentParser(
         # Inherit options from config_parser
         parents=[conf_parser]
-        )
+    )
     parser.set_defaults(**defaults)
     parser.add_argument("--option")
     args = parser.parse_args(remaining_argv)
@@ -70,10 +93,6 @@ def get_params(argv=None):
     print "Option is \"{}\"".format(args.option)
     print args.target_file
     return args
-
-def main():
-    args = get_params()
-
 
 
 if __name__ == "__main__":

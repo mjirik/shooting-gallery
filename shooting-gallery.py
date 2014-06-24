@@ -8,6 +8,7 @@ import pygame
 import argparse
 import ConfigParser
 import sys
+import json
 
 
 class ShootingGallery():
@@ -43,6 +44,9 @@ class ShootingGallery():
 
 def main():
     args = get_params()
+    print vars(args)
+    # convert to ints
+    print json.loads(args.target_center)
     sh = ShootingGallery()
     sh.run()
 
@@ -90,8 +94,6 @@ def get_params(argv=None):
     parser.add_argument("--option")
     args = parser.parse_args(remaining_argv)
     # v args jsou teď všechny parametry
-    print "Option is \"{}\"".format(args.option)
-    print args.target_file
     return args
 
 

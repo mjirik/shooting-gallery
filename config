@@ -1,4 +1,6 @@
 [Defaults]
 target_file = target.jpg
+target_center = [100,80]
+target_radius = 50
 option = haf
 

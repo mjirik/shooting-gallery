@@ -29,16 +29,18 @@ class ShootingGallery():
         """
         funkce opakovaně volá funkci tick
         """
-        #  Ošetření vstupních událostí
-        for udalost in pygame.event.get():
-            if udalost.type == pygame.locals.QUIT:
-                return
-            elif (udalost.type == pygame.locals.KEYDOWN and
-                  udalost.key == pygame.locals.K_ESCAPE):
-                return
-        casovac = pygame.time.Clock()
+
         while 1:
             casovac.tick(20)
+                        #  Ošetření vstupních událostí
+            for udalost in pygame.event.get():
+                if udalost.type == pygame.locals.QUIT:
+                    return
+                elif (udalost.type == pygame.locals.KEYDOWN and
+                      udalost.key == pygame.locals.K_ESCAPE):
+                    return
+            casovac = pygame.time.Clock()
+                
             self.tick()
 
 

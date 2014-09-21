@@ -20,3 +20,9 @@ Kamera a projektor
 * PyGame
 * Promítání obrazu terče pomocí projektoru
 * Možnost pohyblivého terče
+
+
+Testovací obrázky pro RANSAC:
+
+http://read.pudn.com/downloads194/sourcecode/windows/other/911730/box_in_scene.png
+http://read.pudn.com/downloads194/sourcecode/windows/other/911730/box.png

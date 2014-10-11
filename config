@@ -1,6 +1,7 @@
 [Defaults]
 target_file = target.jpg
-target_center = [100,80]
-target_radius = 50
+target_center = [200,300]
+target_radius = 100
+max_score = 10
 option = haf
 

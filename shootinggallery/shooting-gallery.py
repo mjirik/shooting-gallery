@@ -32,21 +32,28 @@ class Target:
     def draw_target(self, frame):
         cv2.circle(frame,
                    (self.center[0], self.center[1]),
-                   self.radius, 200, 0)
+                   self.radius,
+                   (255, 100, 100),
+                   2)
         cv2.circle(frame,
                    (self.center[0], self.center[1]),
-                   self.radius/10, 200, 0)
+                   self.radius/10,
+                   (255, 100, 100),
+                   2)
 
 
 class ShootingGallery():
 
-    def __init__(self):
+    def __init__(self, target=None):
         """
         Inicializační funkce. Volá se jen jednou na začátku.
         """
 # create video capture
         self.cap = cv2.VideoCapture(0)
-        self.target = Target([300, 300], 200, 10)
+        if target is None:
+            self.target = Target([300, 300], 200, 10)
+        else:
+            self.target = target
         self.status_text = ""
         pass
 
@@ -63,12 +70,16 @@ class ShootingGallery():
         for i, keypoint in enumerate(keypoints):
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
-            cv2.circle(frame, (cx, cy), 5 + i, 255, -1)
+# each next point is bigger, just to recognize them
+            cv2.circle(frame, (cx, cy), 10 + i,
+                       (100, 255, 255),
+                       -1)
             # cv2.circle(frame,keypoints[0].pt,5,255,-1)
             # print self.target.get_score([cx,cy])
 
             if i == 0:
-                self.status_text = str(self.target.get_score([cx, cy]))
+                self.status_text = "%.2f" % (
+                    self.target.get_score([cx, cy]))
                 print self.status_text
         # Show it, if key pressed is 'Esc', exit the loop
 
@@ -109,7 +120,7 @@ class ShootingGallery():
         cv2.putText(
             frame,
             self.status_text,
-            (100, 100), font, 4, (255, 255, 255))  # ,2,cv2.LINE_AA)
+            (10, 100), font, 4, (100, 100, 255), 4)  # ,2,cv2.LINE_AA)
 
 
 def main():
@@ -117,7 +128,11 @@ def main():
     print vars(args)
     # convert to ints
     print json.loads(args.target_center)
-    sh = ShootingGallery()
+    target = Target(
+        json.loads(args.target_center),
+        json.loads(args.target_radius),
+        10)
+    sh = ShootingGallery(target)
     sh.run()
 
 

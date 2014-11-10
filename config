@@ -1,7 +1,7 @@
 [Defaults]
-target_file = target.jpg
-target_center = [200,300]
-target_radius = 100
+target_file = 480pxTarget.bmp
+target_center = [240,240]
+target_radius = 240
 max_score = 10
 option = haf
 

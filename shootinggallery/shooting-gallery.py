@@ -60,51 +60,57 @@ class Target:
         sift = cv2.SIFT()
 
 # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(img1,None)
-        kp2, des2 = sift.detectAndCompute(img2,None)
+        kp1, des1 = sift.detectAndCompute(img1, None)
+        kp2, des2 = sift.detectAndCompute(img2, None)
 
         FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-        search_params = dict(checks = 50)
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
 
         flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-        matches = flann.knnMatch(des1,des2,k=2)
+        matches = flann.knnMatch(des1, des2, k=2)
 
 # store all the good matches as per Lowe's ratio test.
         good = []
-        for m,n in matches:
-            if m.distance < 0.7*n.distance:
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
                 good.append(m)
 
-        if len(good)>MIN_MATCH_COUNT:
-            src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-            dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+        if len(good) > MIN_MATCH_COUNT:
+            src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
 
-            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             matchesMask = mask.ravel().tolist()
 
-            h,w = img1.shape
-            pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-            dst = cv2.perspectiveTransform(pts,M)
+            h, w = img1.shape
+            pts = np.float32([[0, 0], [0, h-1], [w-1, h-1], [w-1, 0]]).reshape(-1, 1, 2)
+            dst = cv2.perspectiveTransform(pts, M)
 
-            img3 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.CV_AA)
+            img3 = cv2.polylines(img2, [np.int32(dst)], True, 255, 3, cv2.CV_AA)
 
             Minv, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
             self.Minv = Minv
         else:
-            print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
+            print "Not enough matches are found - %d/%d" % (
+                len(good), MIN_MATCH_COUNT)
             matchesMask = None
 
-        draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-                        singlePointColor = None,
-                        matchesMask = matchesMask, # draw only inliers
-                        flags = 2)
+        draw_params = dict(
+            matchColor=(0, 255, 0),  # draw matches in green color
+            singlePointColor = None,
+            matchesMask=matchesMask,  # draw only inliers
+            flags = 2)
 
+        img3 = drawMatches(img1, kp1, img2, kp2, good)  # ,None,**draw_params)
+        # dst = cv2.warpPerspective(img2, Minv, (480, 480))
+        dst = cv2.warpPerspective(image, Minv, (480, 480))
+        plt.imshow(dst, 'gray')  # , plt.show()
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        return dst
 
-        img3 = drawMatches(img1,kp1,img2,kp2,good) # ,None,**draw_params)
-        dst = cv2.warpPerspective(img2, Minv, (480,480))
-        plt.imshow(dst, 'gray'),plt.show()
 
 def drawMatches(img1, kp1, img2, kp2, matches):
     """
@@ -136,13 +142,13 @@ def drawMatches(img1, kp1, img2, kp2, matches):
     rows2 = img2.shape[0]
     cols2 = img2.shape[1]
 
-    out = np.zeros((max([rows1,rows2]),cols1+cols2,3), dtype='uint8')
+    out = np.zeros((max([rows1, rows2]), cols1+cols2, 3), dtype='uint8')
 
     # Place the first image to the left
-    out[:rows1,:cols1,:] = np.dstack([img1, img1, img1])
+    out[:rows1, :cols1,:] = np.dstack([img1, img1, img1])
 
     # Place the next image to the right of it
-    out[:rows2,cols1:cols1+cols2,:] = np.dstack([img2, img2, img2])
+    out[:rows2, cols1:cols1+cols2,:] = np.dstack([img2, img2, img2])
 
     # For each pair of points we have between both images
     # draw circles, then connect a line between them
@@ -154,26 +160,46 @@ def drawMatches(img1, kp1, img2, kp2, matches):
 
         # x - columns
         # y - rows
-        (x1,y1) = kp1[img1_idx].pt
-        (x2,y2) = kp2[img2_idx].pt
+        (x1, y1) = kp1[img1_idx].pt
+        (x2, y2) = kp2[img2_idx].pt
 
         # Draw a small circle at both co-ordinates
         # radius 4
         # colour blue
         # thickness = 1
-        cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)
-        cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
+        cv2.circle(out, (int(x1), int(y1)), 4, (255, 0, 0), 1)
+        cv2.circle(out, (int(x2)+cols1, int(y2)), 4, (255, 0, 0), 1)
 
         # Draw a line in between the two points
         # thickness = 1
         # colour blue
-        cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
-
+        cv2.line(out, (int(x1), int(y1)), (int(x2)+cols1, int(y2)), (255, 0, 0), 1)
 
     # Show the image
     cv2.imshow('Matched Features', out)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+class FrameGetter():
+    """
+    unused will be removed
+    """
+    def __init__(self, video_source=0):
+        self.video_source = video_source
+        if video_source == 0:
+            self.cap = cv2.VideoCapture(0)
+        else:
+            pass
+
+    def read(self):
+        if self.video_source == 0:
+            res, frame = self.cap.read()
+        else:
+            self.cap = cv2.VideoCapture(self.video_source)
+            res, frame = self.cap.read()
+        return res, frame
+
 
 class ShootingGallery():
 
@@ -182,7 +208,10 @@ class ShootingGallery():
         Inicializační funkce. Volá se jen jednou na začátku.
         """
 # create video capture
-        self.cap = cv2.VideoCapture(0)
+        video_source = 0
+        video_source = "http://192.168.1.50/snapshot.jpg"
+        # self.cap = cv2.VideoCapture(video_source)
+        self.cap = FrameGetter(video_source)
         if target is None:
             self.target = Target([300, 300], 200, 10)
         else:
@@ -190,17 +219,7 @@ class ShootingGallery():
         self.status_text = ""
         pass
 
-    def tick(self):
-        """
-        Tato funkce se vykonává opakovaně
-        """
-        # read the frames
-        _, frame = self.cap.read()
-        frame = cv2.warpPerspective(frame, self.target.Minv, (480,480))
-
-        keypoints = bd.red_dot_detection(frame)
-
-        # smooth it
+    def __show_keypoints(self, keypoints, frame):
         for i, keypoint in enumerate(keypoints):
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
@@ -215,6 +234,21 @@ class ShootingGallery():
                 self.status_text = "%.2f" % (
                     self.target.get_score([cx, cy]))
                 print self.status_text
+        return frame
+
+    def tick(self):
+        """
+        Tato funkce se vykonává opakovaně
+        """
+        # read the frames
+        _, frame = self.cap.read()
+        frame = cv2.warpPerspective(frame, self.target.Minv, (480, 480))
+
+        # keypoints = bd.red_dot_detection(frame)
+        keypoints = bd.diff_dot_detection(frame, self.init_frame)
+
+        # smooth it
+        frame = self.__show_keypoints(keypoints, frame)
         # Show it, if key pressed is 'Esc', exit the loop
 
         self.print_status(frame)
@@ -227,7 +261,7 @@ class ShootingGallery():
 
     def calibration(self):
         _, frame = self.cap.read()
-        self.target.find_target(frame)
+        self.init_frame = self.target.find_target(frame)
 
     def run(self):
         """
@@ -235,6 +269,7 @@ class ShootingGallery():
         """
         self.calibration()
 
+        print('Run')
         while 1:
             # casovac.tick(20)
             # Ošetření vstupních událostí

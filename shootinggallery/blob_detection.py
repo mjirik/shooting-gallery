@@ -2,6 +2,19 @@ import cv2
 import numpy as np
 
 
+def diff_dot_diff_detection(frame, init_frame):
+    frame = frame - init_frame
+
+    frame = cv2.blur(frame, (5, 5))
+    blob_detector = cv2.FeatureDetector_create("SimpleBlob")
+    detector_image = np.minimum(
+        color_filter(frame, [255, 255, 255]),
+        color_filter(frame, [10, 10, 255]))
+
+    keypoints = blob_detector.detect(detector_image)
+    return keypoints
+
+
 def red_dot_detection(frame, return_detector_image=False):
 
     frame = cv2.blur(frame, (5, 5))

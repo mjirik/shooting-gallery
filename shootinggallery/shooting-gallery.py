@@ -11,6 +11,8 @@ import sys
 import json
 import cv2
 import numpy as np
+from skimage.filter import threshold_otsu, gaussian_filter
+import matplotlib.pyplot as plt
 
 import blob_detection as bd
 
@@ -33,6 +35,7 @@ class Target:
     def draw_target(self, frame):
         cv2.circle(frame,
                    (self.center[0], self.center[1]),
+
                    self.radius,
                    (255, 100, 100),
                    2)
@@ -203,13 +206,18 @@ class FrameGetter():
 
 class ShootingGallery():
 
-    def __init__(self, target=None):
+    def __init__(self, target=None, video_source=0):
         """
         Inicializační funkce. Volá se jen jednou na začátku.
+
+        :param video_source: zdroj videa, pokud je nastaveno na číslo, je
+        hledána USB kamera, je-li vložena url, předpokládá se kamera s výstupem
+        do jpg.
+
         """
 # create video capture
-        video_source = 0
-        video_source = "http://192.168.1.50/snapshot.jpg"
+        # video_source = 0
+        # video_source = "http://192.168.1.60/snapshot.jpg"
         # self.cap = cv2.VideoCapture(video_source)
         self.cap = FrameGetter(video_source)
         if target is None:
@@ -245,7 +253,8 @@ class ShootingGallery():
         frame = cv2.warpPerspective(frame, self.target.Minv, (480, 480))
 
         # keypoints = bd.red_dot_detection(frame)
-        keypoints = bd.diff_dot_detection(frame, self.init_frame)
+        # keypoints = bd.diff_dot_detection(frame, self.init_frame)
+        keypoints, frame = self.dot_detector.detect(frame, True)
 
         # smooth it
         frame = self.__show_keypoints(keypoints, frame)
@@ -260,8 +269,17 @@ class ShootingGallery():
         return True
 
     def calibration(self):
+        # get transformation
         _, frame = self.cap.read()
         self.init_frame = self.target.find_target(frame)
+        # get image with red point
+        _, frame = self.cap.read()
+        frame_with_dot = cv2.warpPerspective(frame, self.target.Minv, (480, 480))
+        plt.imshow(frame_with_dot)
+        print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
+        
+        self.dot_detector = bd.RedDotDetector()
+        self.dot_detector.interactive_train(frame_with_dot) #pts[0], pts[1])
 
     def run(self):
         """
@@ -308,7 +326,7 @@ def main():
         10,
         args.target_file
     )
-    sh = ShootingGallery(target)
+    sh = ShootingGallery(target, video_source=json.loads(args.video_source))
     sh.run()
 
 

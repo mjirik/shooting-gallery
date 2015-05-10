@@ -4,4 +4,5 @@ target_center = [240,240]
 target_radius = 240
 max_score = 10
 option = haf
+video_source = "http://192.168.1.60/snapshot.jpg"
 

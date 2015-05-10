@@ -1,5 +1,24 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+
+
+class RedDotDetector():
+
+    def interactive_train(self, frame):
+        plt.imshow(frame)
+
+        pts = plt.ginput(2)
+
+        self.color_prototype_dot = frame[pts[0][::-1]]
+        self.color_prototype_background = frame[pts[1][::-1]]
+
+    def detect(self, frame, return_detector_image=False):
+        return red_dot_detection(
+            frame,
+            return_detector_image,
+            self.color_prototype_dot,
+            self.color_prototype_background)
 
 
 def diff_dot_diff_detection(frame, init_frame):
@@ -15,7 +34,11 @@ def diff_dot_diff_detection(frame, init_frame):
     return keypoints
 
 
-def red_dot_detection(frame, return_detector_image=False):
+def red_dot_detection(
+        frame,
+        return_detector_image=False,
+        color_prototype_dot=[255, 255, 255],
+        color_prototype_background=[10, 10, 255]):
 
     frame = cv2.blur(frame, (5, 5))
 
@@ -27,9 +50,23 @@ def red_dot_detection(frame, return_detector_image=False):
     # gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     # inv_r_channel = 255 - frame[:,:,2]
     # red or white colors
-    detector_image = np.minimum(
-        color_filter(frame, [255, 255, 255]),
-        color_filter(frame, [10, 10, 255]))
+    # detector_image = np.minimum(
+    #     color_filter(frame, color_prototype_dot),
+    #     color_filter(frame, color_prototype_background))
+    thr = (color_prototype_dot.astype(np.int) +  
+            color_prototype_background.astype(np.int)) / 2
+    # simil_dot = color_filter(frame, color_prototype_dot)
+    # simil_background = color_filter(frame, color_prototype_background)
+    # detector_image = (frame > thr).astype(np.uint8)
+    detector_image = (frame>thr).all(axis=2).astype(np.uint8)
+    import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+    # detector_image = (
+    #         color_filter(frame, color_prototype_dot) )
+    # detector_image = (
+    #         color_filter(frame, color_prototype_dot).astype(np.int) -
+    #         color_filter(frame, color_prototype_background).astype(np.int)).astype(np.int)
+
+    # detector_image = np.average(detector_image, axis=2)
     keypoints = blob_detector.detect(detector_image)
     # convert to hsv and find range of colors
     # hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)

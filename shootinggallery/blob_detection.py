@@ -12,13 +12,61 @@ class RedDotDetector():
 
         self.color_prototype_dot = frame[pts[0][::-1]]
         self.color_prototype_background = frame[pts[1][::-1]]
+        self.min_area = 500
+
+#         params = cv2.SimpleBlobDetector_Params()
+#         # Change thresholds
+#         params.minThreshold = int(np.mean(self.color_prototype_background))
+#         params.maxThreshold = int(np.mean(self.color_prototype_dot))
+#
+#         # Filter by Area.
+#         params.filterByArea = True
+#         params.minArea = 1500
+#         params.minArea = 550000
+# # Create a detector with the parameters
+#         ver = (cv2.__version__).split('.')
+#         if int(ver[0]) < 3 :
+#             self.blob_detector = cv2.SimpleBlobDetector(params)
+#         else :
+#             self.blob_detector = cv2.SimpleBlobDetector_create(params)
 
     def detect(self, frame, return_detector_image=False):
-        return red_dot_detection(
-            frame,
-            return_detector_image,
-            self.color_prototype_dot,
-            self.color_prototype_background)
+
+        thr = (self.color_prototype_dot.astype(np.int) +  
+                self.color_prototype_background.astype(np.int)) / 2
+        detector_image = (frame > thr).all(axis=2).astype(np.uint8)
+        # detector_image = np.average(detector_image, axis=2)
+        # detector_image = np.mean(frame, axis=2).astype(np.uint8)
+
+        import skimage
+        import skimage.morphology
+        import skimage.measure
+        imlab = skimage.morphology.label(detector_image, background=0)
+        props = skimage.measure.regionprops(imlab)
+        keypoints = []
+        for prop in props:
+            if prop.area > self.min_area:
+                keypoints.append(KeypointFake(prop.centroid))
+
+        # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+        
+        
+        # keypoints = self.blob_detector.detect(detector_image)
+
+
+        if return_detector_image:
+            return keypoints, detector_image
+        return keypoints
+        # return red_dot_detection(
+        #     frame,
+        #     return_detector_image,
+        #     self.color_prototype_dot,
+        #     self.color_prototype_background)
+
+
+class KeypointFake():
+    def __init__(self, point):
+        self.pt = point
 
 
 def diff_dot_diff_detection(frame, init_frame):
@@ -59,7 +107,7 @@ def red_dot_detection(
     # simil_background = color_filter(frame, color_prototype_background)
     # detector_image = (frame > thr).astype(np.uint8)
     detector_image = (frame>thr).all(axis=2).astype(np.uint8)
-    import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+    # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
     # detector_image = (
     #         color_filter(frame, color_prototype_dot) )
     # detector_image = (
@@ -67,6 +115,8 @@ def red_dot_detection(
     #         color_filter(frame, color_prototype_background).astype(np.int)).astype(np.int)
 
     # detector_image = np.average(detector_image, axis=2)
+    import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+    
     keypoints = blob_detector.detect(detector_image)
     # convert to hsv and find range of colors
     # hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)

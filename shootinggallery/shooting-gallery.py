@@ -254,7 +254,8 @@ class ShootingGallery():
 
         # keypoints = bd.red_dot_detection(frame)
         # keypoints = bd.diff_dot_detection(frame, self.init_frame)
-        keypoints, frame = self.dot_detector.detect(frame, True)
+        # keypoints, frame = self.dot_detector.detect(frame, True)
+        keypoints = self.dot_detector.detect(frame)
 
         # smooth it
         frame = self.__show_keypoints(keypoints, frame)

@@ -15,6 +15,7 @@ from skimage.filter import threshold_otsu, gaussian_filter
 import matplotlib.pyplot as plt
 import pygame
 import pygame.locals
+import pygame.image
 import yaml
 
 import blob_detection as bd
@@ -35,7 +36,7 @@ class Target:
         self.center = np.asarray(center)
         self.radius = radius
         self.max_score = max_score
-        self.target_file = target_file
+        self.image = pygame.image.load(target_file)
         self.score_coeficient = float(max_score) / float(radius)
 
     def get_score(self, impact_point):
@@ -56,6 +57,22 @@ class Target:
                    self.radius/10,
                    (255, 100, 100),
                    2)
+
+    def tick(self):
+# TODO target movement
+        pass
+class Targets():
+    def __init__(self):
+        self.targets = []
+
+    def add_from_config(self, config):
+        for tg in config:
+            target = Target(**tg)
+            self.add(target)
+
+    def add(self, target):
+        self.targets.append(target)
+
 
 class CalibrationSurface():
     def __init__(self, target_file, show_function=None):
@@ -260,7 +277,9 @@ class ShootingGallery():
         #     self.target = target
         self.status_text = ""
         self.target = target
-        pass
+        # self.default_mode = 'paper'
+        self.mode = 'projector' 
+        self.mode = 'paper' 
 
     def __show_keypoints(self, keypoints, frame):
         for i, keypoint in enumerate(keypoints):
@@ -287,7 +306,7 @@ class ShootingGallery():
         ret, frame = self.cap.read()
         if ret:
 
-            frame = cv2.warpPerspective(
+            wframe = cv2.warpPerspective(
                     frame, 
                     self.calibration_surface.Minv, 
                     tuple(self.config['resolution']))
@@ -295,17 +314,28 @@ class ShootingGallery():
             # keypoints = bd.red_dot_detection(frame)
             # keypoints = bd.diff_dot_detection(frame, self.init_frame)
             # keypoints, frame = self.dot_detector.detect(frame, True)
-            keypoints = self.dot_detector.detect(frame)
+            keypoints = self.dot_detector.detect(wframe)
 
-            # smooth it
-            frame = self.__show_keypoints(keypoints, frame)
-            # Show it, if key pressed is 'Esc', exit the loop
+            if self.mode == 'paper':
+                # smooth it
+                wframe = self.__show_keypoints(keypoints, wframe)
+                # Show it, if key pressed is 'Esc', exit the loop
 
-            self.print_status(frame)
-            self.target.draw_target(frame)
-            # cv2.imshow('frame', frame)
-            frame = np.transpose(frame, axes=[1, 0, 2])
-            surf = makesurf(frame)
+                self.print_status(wframe)
+                self.target.draw_target(wframe)
+                # cv2.imshow('frame', frame)
+                wframe = np.transpose(wframe, axes=[1, 0, 2])
+                surf = makesurf(wframe)
+            elif self.mode == 'projector':
+# TODO projector mode
+                wframe = self.__show_keypoints(keypoints, self.target.image)
+                # Show it, if key pressed is 'Esc', exit the loop
+
+                self.print_status(wframe)
+                self.target.draw_target(wframe)
+                # cv2.imshow('frame', frame)
+                wframe = np.transpose(wframe, axes=[1, 0, 2])
+                surf = makesurf(wframe)
             self.screen.blit(surf, (0,0))
             pygame.display.flip()        
             self.clock.tick(10)                                  # omezení maximálního počtu snímků za sekundu
@@ -318,7 +348,6 @@ class ShootingGallery():
         self.init_frame = self.calibration_surface.find_surface(frame)
         # get image with red point
         self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
-        _, frame = self.cap.read()
         _, frame = self.cap.read()
 
 
@@ -350,6 +379,8 @@ class ShootingGallery():
         """
         pygame.init()
         self.screen = pygame.display.set_mode(self.config['resolution'])         # vytvoření okna s nastavením jeho velikosti
+        self.projector = pygame.display.set_mode(self.config['resolution'])         # vytvoření okna s nastavením jeho velikosti
+
         pygame.display.set_caption("Shooting Gallery")               # nastavení titulku okna
         self.background = pygame.Surface(self.screen.get_size())      # vytvoření vrstvy pozadí
         self.background = self.background.convert()                   # převod vrstvy do vhodného formátu

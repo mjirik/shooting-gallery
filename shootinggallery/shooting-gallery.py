@@ -13,9 +13,21 @@ import cv2
 import numpy as np
 from skimage.filter import threshold_otsu, gaussian_filter
 import matplotlib.pyplot as plt
+import pygame
+import pygame.locals
+import yaml
 
 import blob_detection as bd
 
+
+def makesurf(pixels):
+    try:
+        surf = pygame.surfarray.make_surface(pixels)
+    except IndexError:
+        (width, height, colours) = pixels.shape
+        surf = pygame.display.set_mode((width, height))
+        pygame.surfarray.blit_array(surf, pixels)
+    return surf
 
 class Target:
 
@@ -45,8 +57,16 @@ class Target:
                    (255, 100, 100),
                    2)
 
-    def find_target(self, image):
-        import cv2
+class CalibrationSurface():
+    def __init__(self, target_file, show_function=None):
+        self.target_file = target_file
+        self.calibim = cv2.imread(self.target_file)          # queryImage
+        self.calibim_gray = cv2.cvtColor(self.calibim, cv2.COLOR_BGR2GRAY)
+        # if show_function is None:
+        #     show_function = cv2.imshow
+
+
+    def find_surface(self, image):
         from matplotlib import pyplot as plt
 
         MIN_MATCH_COUNT = 10
@@ -54,9 +74,8 @@ class Target:
         # img1 = cv2.imread('shootinggallery/box.png',0)          # queryImage
         # img2 = cv2.imread('shootinggallery/box_in_scene.png',0) # trainImage
         img2 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        img1 = self.calibim_gray
 
-        img1 = cv2.imread(self.target_file)          # queryImage
-        img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 
 
 # Initiate SIFT detector
@@ -106,13 +125,22 @@ class Target:
             matchesMask=matchesMask,  # draw only inliers
             flags = 2)
 
-        img3 = drawMatches(img1, kp1, img2, kp2, good)  # ,None,**draw_params)
+        self.img1 = img1
+        self.img2 = img2
+        self.kp1 = kp1
+        self.kp2 = kp2
+        self.good = good
         # dst = cv2.warpPerspective(img2, Minv, (480, 480))
-        dst = cv2.warpPerspective(image, Minv, (480, 480))
-        plt.imshow(dst, 'gray')  # , plt.show()
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # dst = cv2.warpPerspective(image, Minv, (480, 480))
+        dst = cv2.warpPerspective(image, Minv, img1.shape)
+        # plt.imshow(dst, 'gray')  # , plt.show()
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
         return dst
+
+    def draw_matches(self):
+        img3 = drawMatches(self.img1, self.kp1, 
+                           self.img2, self.kp2, self.good)  # ,None,**draw_params)
 
 
 def drawMatches(img1, kp1, img2, kp2, matches):
@@ -193,20 +221,17 @@ class FrameGetter():
         if video_source == 0:
             self.cap = cv2.VideoCapture(0)
         else:
+            self.cap = cv2.VideoCapture(self.video_source)
             pass
 
     def read(self):
-        if self.video_source == 0:
-            res, frame = self.cap.read()
-        else:
-            self.cap = cv2.VideoCapture(self.video_source)
-            res, frame = self.cap.read()
+        res, frame = self.cap.read()
         return res, frame
 
 
 class ShootingGallery():
 
-    def __init__(self, target=None, video_source=0):
+    def __init__(self, config): # target=None, video_source=0):
         """
         Inicializační funkce. Volá se jen jednou na začátku.
 
@@ -215,16 +240,26 @@ class ShootingGallery():
         do jpg.
 
         """
+        self.config = config
+        target = Target(
+            config['target_center'],
+            config['target_radius'],
+            10,
+            config['target_file']
+        )
+        self.calibration_surface = CalibrationSurface(config['target_file'])
+        video_source = config['video_source']
 # create video capture
         # video_source = 0
         # video_source = "http://192.168.1.60/snapshot.jpg"
         # self.cap = cv2.VideoCapture(video_source)
         self.cap = FrameGetter(video_source)
-        if target is None:
-            self.target = Target([300, 300], 200, 10)
-        else:
-            self.target = target
+        # if target is None:
+        #     self.target = Target([300, 300], 200, 10)
+        # else:
+        #     self.target = target
         self.status_text = ""
+        self.target = target
         pass
 
     def __show_keypoints(self, keypoints, frame):
@@ -249,44 +284,82 @@ class ShootingGallery():
         Tato funkce se vykonává opakovaně
         """
         # read the frames
-        _, frame = self.cap.read()
-        frame = cv2.warpPerspective(frame, self.target.Minv, (480, 480))
+        ret, frame = self.cap.read()
+        if ret:
 
-        # keypoints = bd.red_dot_detection(frame)
-        # keypoints = bd.diff_dot_detection(frame, self.init_frame)
-        # keypoints, frame = self.dot_detector.detect(frame, True)
-        keypoints = self.dot_detector.detect(frame)
+            frame = cv2.warpPerspective(
+                    frame, 
+                    self.calibration_surface.Minv, 
+                    tuple(self.config['resolution']))
 
-        # smooth it
-        frame = self.__show_keypoints(keypoints, frame)
-        # Show it, if key pressed is 'Esc', exit the loop
+            # keypoints = bd.red_dot_detection(frame)
+            # keypoints = bd.diff_dot_detection(frame, self.init_frame)
+            # keypoints, frame = self.dot_detector.detect(frame, True)
+            keypoints = self.dot_detector.detect(frame)
 
-        self.print_status(frame)
-        self.target.draw_target(frame)
-        cv2.imshow('frame', frame)
-        # cv2.imshow('thresh',inv_r_channel)
-        if cv2.waitKey(33) == 27:
-            return False
+            # smooth it
+            frame = self.__show_keypoints(keypoints, frame)
+            # Show it, if key pressed is 'Esc', exit the loop
+
+            self.print_status(frame)
+            self.target.draw_target(frame)
+            # cv2.imshow('frame', frame)
+            frame = np.transpose(frame, axes=[1, 0, 2])
+            surf = makesurf(frame)
+            self.screen.blit(surf, (0,0))
+            pygame.display.flip()        
+            self.clock.tick(10)                                  # omezení maximálního počtu snímků za sekundu
         return True
 
     def calibration(self):
         # get transformation
+        self.__calib_show_function(self.calibration_surface.calibim)
         _, frame = self.cap.read()
-        self.init_frame = self.target.find_target(frame)
+        self.init_frame = self.calibration_surface.find_surface(frame)
         # get image with red point
+        self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
         _, frame = self.cap.read()
-        frame_with_dot = cv2.warpPerspective(frame, self.target.Minv, (480, 480))
+        _, frame = self.cap.read()
+
+
+        frame_with_dot = cv2.warpPerspective(
+                frame,
+                self.calibration_surface.Minv, 
+                tuple(self.config['resolution'])
+                # (480, 480)
+                # self.calibration_surface.calibim_gray.shape
+                )# (480, 480))
         plt.imshow(frame_with_dot)
         print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
         
         self.dot_detector = bd.RedDotDetector()
         self.dot_detector.interactive_train(frame_with_dot) #pts[0], pts[1])
 
+    def __calib_show_function(self, frame):
+
+        frame = np.transpose(frame, axes=[1, 0, 2])
+        surf = makesurf(frame)
+        self.screen.blit(surf, (0,0))
+        pygame.display.flip()        
+        self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
+
+
     def run(self):
         """
         funkce opakovaně volá funkci tick
         """
+        pygame.init()
+        self.screen = pygame.display.set_mode(self.config['resolution'])         # vytvoření okna s nastavením jeho velikosti
+        pygame.display.set_caption("Shooting Gallery")               # nastavení titulku okna
+        self.background = pygame.Surface(self.screen.get_size())      # vytvoření vrstvy pozadí
+        self.background = self.background.convert()                   # převod vrstvy do vhodného formátu
+        self.background.fill((0,0,255))                 
+        self.clock = pygame.time.Clock()                         # časování
+
+        pygame.display.flip()        
+        self.clock.tick(5)                                  # omezení maximálního počtu snímků za sekundu
         self.calibration()
+
 
         print('Run')
         while 1:
@@ -317,17 +390,10 @@ class ShootingGallery():
 
 
 def main():
-    args = get_params()
-    print vars(args)
+    config = get_params()
+    print config
     # convert to ints
-    print json.loads(args.target_center)
-    target = Target(
-        json.loads(args.target_center),
-        json.loads(args.target_radius),
-        10,
-        args.target_file
-    )
-    sh = ShootingGallery(target, video_source=json.loads(args.video_source))
+    sh = ShootingGallery(config)
     sh.run()
 
 
@@ -355,26 +421,29 @@ def get_params(argv=None):
     conf_parser.add_argument("-c", "--conf_file",
                              help="Specify config file", metavar="FILE",
                              default='config')
-    args, remaining_argv = conf_parser.parse_known_args()
+    args = conf_parser.parse_args()
 
-    if args.conf_file:
-        config = ConfigParser.SafeConfigParser()
-        config.read([args.conf_file])
-        defaults = dict(config.items("Defaults"))
-    else:
-        defaults = {"option": "default"}
+    # if args.conf_file:
+    stream = open(args.conf_file, 'r')
+    config = yaml.load(stream)
 
-    # Parse rest of arguments
-    # Don't suppress add_help here so it will handle -h
-    parser = argparse.ArgumentParser(
-        # Inherit options from config_parser
-        parents=[conf_parser]
-    )
-    parser.set_defaults(**defaults)
-    parser.add_argument("--option")
-    args = parser.parse_args(remaining_argv)
-    # v args jsou teď všechny parametry
-    return args
+        # config = ConfigParser.SafeConfigParser()
+        # config.read([args.conf_file])
+        # defaults = dict(config.items("Defaults"))
+    # else:
+    #     config = {"option": "default"}
+
+    # # Parse rest of arguments
+    # # Don't suppress add_help here so it will handle -h
+    # parser = argparse.ArgumentParser(
+    #     # Inherit options from config_parser
+    #     parents=[conf_parser]
+    # )
+    # parser.set_defaults(**defaults)
+    # parser.add_argument("--option")
+    # args = parser.parse_args(remaining_argv)
+    # # v args jsou teď všechny parametry
+    return config 
 
 
 if __name__ == "__main__":

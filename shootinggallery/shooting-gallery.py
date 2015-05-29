@@ -21,6 +21,7 @@ import numpy as np
 
 import blob_detection as bd
 import calib
+import expocomp
 
 
 def makesurf(pixels):
@@ -146,6 +147,25 @@ class ShootingGallery():
                 print self.status_text
         return frame
 
+    def __camera_image_processing(self, frame):
+        """
+        :cframe: compensated frame
+        :wframe: warped frame
+        """
+
+        cframe = self.aec.compensate(frame)
+
+        if self.calibration_surface.Minv is None:
+            wframe = cframe
+        else:
+            wframe = cv2.warpPerspective(
+                    cframe, 
+                    self.calibration_surface.Minv, 
+                    tuple(self.config['resolution']))
+        return wframe, cframe
+
+
+
     def tick(self):
         """
         Tato funkce se vykonává opakovaně
@@ -154,46 +174,46 @@ class ShootingGallery():
         ret, frame = self.cap.read()
         if ret:
 
-            if self.calibration_surface.Minv is None:
-                wframe = frame
-            else:
-                wframe = cv2.warpPerspective(
-                        frame, 
-                        self.calibration_surface.Minv, 
-                        tuple(self.config['resolution']))
+            wframe, cframe = self.__camera_image_processing(frame)
+
 
             # keypoints = bd.red_dot_detection(frame)
             # keypoints = bd.diff_dot_detection(frame, self.init_frame)
             # keypoints, frame = self.dot_detector.detect(frame, True)
             keypoints = self.dot_detector.detect(wframe)
 
-            if self.mode == 'paper':
-                # smooth it
-                wframe = self.__show_keypoints(keypoints, wframe)
-                # Show it, if key pressed is 'Esc', exit the loop
+            if self.debugmode == "N":
+                if self.mode == 'paper':
+                    # smooth it
+                    wframe = self.__show_keypoints(keypoints, wframe)
+                    # Show it, if key pressed is 'Esc', exit the loop
 
-                self.print_status(wframe)
-                self.target.draw_target(wframe)
-                # cv2.imshow('frame', frame)
-                wframe = np.transpose(wframe, axes=[1, 0, 2])
-                surf = makesurf(wframe)
-            elif self.mode == 'projector':
+                    self.print_status(wframe)
+                    self.target.draw_target(wframe)
+                    # cv2.imshow('frame', frame)
+                    wframe = np.transpose(wframe, axes=[1, 0, 2])
+                    surf = makesurf(wframe)
+                elif self.mode == 'projector':
 # TODO projector mode
-                wframe = self.__show_keypoints(keypoints, self.target.image)
-                # Show it, if key pressed is 'Esc', exit the loop
+                    wframe = self.__show_keypoints(keypoints, self.target.image)
+                    # Show it, if key pressed is 'Esc', exit the loop
 
-                self.print_status(wframe)
-                self.target.draw_target(wframe)
-                # cv2.imshow('frame', frame)
-                wframe = np.transpose(wframe, axes=[1, 0, 2])
-                surf = makesurf(wframe)
-            self.screen.blit(surf, (0,0))
-            pygame.display.flip()        
-            self.clock.tick(10)                                  # omezení maximálního počtu snímků za sekundu
-            self.event_processing()
+                    self.print_status(wframe)
+                    self.target.draw_target(wframe)
+                    # cv2.imshow('frame', frame)
+                    wframe = np.transpose(wframe, axes=[1, 0, 2])
+                    surf = makesurf(wframe)
+                self.screen.blit(surf, (0,0))
 
             if self.debugmode == "D":
-                self.screen.blit(frame, (0,0))
+                self.screen.blit(makesurf(frame), (0, 0))
+            elif self.debugmode == "F":
+                self.screen.blit(makesurf(cframe), (0, 0))
+            elif self.debugmode == "G":
+                self.screen.blit(makesurf(wframe), (0, 0))
+            pygame.display.flip()        
+            self.clock.tick(20)                                  # omezení maximálního počtu snímků za sekundu
+            self.event_processing()
         return True
 
     def __prepare_scene(self, i):
@@ -245,12 +265,16 @@ class ShootingGallery():
 
                 elif event.key == pygame.locals.K_d:
                         self.debugmode = 'D' 
+                        print "debugmode D"
                 elif event.key == pygame.locals.K_f:
-                        self.debugmode = 'C' 
+                        self.debugmode = 'F' 
+                        print "debugmode F"
                 elif event.key == pygame.locals.K_g:
-                        self.debugmode = 'CC' 
+                        self.debugmode = 'G' 
+                        print "debugmode G"
                 elif event.key == pygame.locals.K_n:
                         self.debugmode = 'N' 
+                        print "debugmode N"
                     # self.__prepare_scene(5)
 
     def calibration(self):
@@ -258,6 +282,10 @@ class ShootingGallery():
 # show calibration image (for projector mode)
         self.__calib_show_function(self.calibration_surface.calibim)
         _, frame = self.cap.read()
+        self.aec = expocomp.AutomaticExposureCompensation()
+        
+        self.aec.set_ref_image(frame)
+        self.aec.set_area(20, 20)
         self.init_frame = self.calibration_surface.find_surface(frame)
         # get image with red point
         self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu

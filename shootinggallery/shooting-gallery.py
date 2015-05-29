@@ -127,6 +127,7 @@ class ShootingGallery():
         # self.default_mode = 'paper'
         self.mode = 'projector' 
         self.mode = 'paper' 
+        self.debugmode = 'N'
 
     def __show_keypoints(self, keypoints, frame):
         for i, keypoint in enumerate(keypoints):
@@ -153,10 +154,13 @@ class ShootingGallery():
         ret, frame = self.cap.read()
         if ret:
 
-            wframe = cv2.warpPerspective(
-                    frame, 
-                    self.calibration_surface.Minv, 
-                    tuple(self.config['resolution']))
+            if self.calibration_surface.Minv is None:
+                wframe = frame
+            else:
+                wframe = cv2.warpPerspective(
+                        frame, 
+                        self.calibration_surface.Minv, 
+                        tuple(self.config['resolution']))
 
             # keypoints = bd.red_dot_detection(frame)
             # keypoints = bd.diff_dot_detection(frame, self.init_frame)
@@ -186,10 +190,72 @@ class ShootingGallery():
             self.screen.blit(surf, (0,0))
             pygame.display.flip()        
             self.clock.tick(10)                                  # omezení maximálního počtu snímků za sekundu
+            self.event_processing()
+
+            if self.debugmode == "D":
+                self.screen.blit(frame, (0,0))
         return True
+
+    def __prepare_scene(self, i):
+        pass
+
+    def event_processing(self):
+        for event in pygame.event.get():
+            # any other key event input
+            if event.type == pygame.locals.QUIT:
+                done = True        
+            elif event.type == pygame.locals.KEYDOWN:
+                if event.key == pygame.locals.K_ESCAPE:
+                    self.keepGoing = False
+                elif event.key == pygame.locals.K_1:
+                    print "hi world mode"
+
+
+                # if event.key == pygame.K_ESCAPE:
+                #     self.keepGoing = False                       # ukončení hlavní smyčky
+                elif event.key == pygame.locals.K_SPACE:
+                    self.snapshot()
+                elif event.key == pygame.locals.K_KP0:
+                    self.__prepare_scene(0)
+                elif event.key == pygame.locals.K_KP1:
+                    self.__prepare_scene(1)
+                elif event.key == pygame.locals.K_KP2:
+                    self.__prepare_scene(2)
+                elif event.key == pygame.locals.K_KP3:
+                    self.__prepare_scene(3)
+                elif event.key == pygame.locals.K_KP4:
+                    self.__prepare_scene(4)
+                elif event.key == pygame.locals.K_KP5:
+                    self.__prepare_scene(5)
+                elif event.key == pygame.locals.K_KP6:
+                    self.__prepare_scene(6)
+                elif event.key == pygame.locals.K_KP7:
+                    self.__prepare_scene(7)
+                elif event.key == pygame.locals.K_KP8:
+                    self.__prepare_scene(8)
+                elif event.key == pygame.locals.K_KP9:
+                    self.__prepare_scene(9)
+                elif event.key == pygame.locals.K_i:
+                    print self.cap.get(cv.CV_CAP_PROP_MODE)
+                    print self.cap.get(cv.CV_CAP_PROP_BRIGHTNESS)
+                    print self.cap.get(cv.CV_CAP_PROP_CONTRAST)
+                    print self.cap.get(cv.CV_CAP_PROP_SATURATION)
+                    print self.cap.get(cv.CV_CAP_PROP_GAIN)
+                    import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+
+                elif event.key == pygame.locals.K_d:
+                        self.debugmode = 'D' 
+                elif event.key == pygame.locals.K_f:
+                        self.debugmode = 'C' 
+                elif event.key == pygame.locals.K_g:
+                        self.debugmode = 'CC' 
+                elif event.key == pygame.locals.K_n:
+                        self.debugmode = 'N' 
+                    # self.__prepare_scene(5)
 
     def calibration(self):
         # get transformation
+# show calibration image (for projector mode)
         self.__calib_show_function(self.calibration_surface.calibim)
         _, frame = self.cap.read()
         self.init_frame = self.calibration_surface.find_surface(frame)
@@ -197,14 +263,17 @@ class ShootingGallery():
         self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
         _, frame = self.cap.read()
 
-
-        frame_with_dot = cv2.warpPerspective(
-                frame,
-                self.calibration_surface.Minv, 
-                tuple(self.config['resolution'])
-                # (480, 480)
-                # self.calibration_surface.calibim_gray.shape
-                )# (480, 480))
+        if self.calibration_surface.Minv is None:
+            frame_with_dot = frame
+            print("Calibration failed")
+        else:
+            frame_with_dot = cv2.warpPerspective(
+                    frame,
+                    self.calibration_surface.Minv, 
+                    tuple(self.config['resolution'])
+                    # (480, 480)
+                    # self.calibration_surface.calibim_gray.shape
+                    )# (480, 480))
         plt.imshow(frame_with_dot)
         print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
         

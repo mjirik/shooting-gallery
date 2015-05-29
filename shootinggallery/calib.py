@@ -25,6 +25,7 @@ class Calibration():
         self.target_file = target_file
         self.calibim = cv2.imread(self.target_file)          # queryImage
         self.calibim_gray = cv2.cvtColor(self.calibim, cv2.COLOR_BGR2GRAY)
+        self.Minv = None
         # if show_function is None:
         #     show_function = cv2.imshow
 
@@ -44,6 +45,7 @@ class Calibration():
         self.mean_white = np.mean(frame[imt_white], axis=0)
 
     def find_surface(self, frame=None):
+        Minv = None
         if frame is None:
             frame = self.get_frame()
         from matplotlib import pyplot as plt
@@ -111,8 +113,11 @@ class Calibration():
         self.good = good
         # dst = cv2.warpPerspective(img2, Minv, (480, 480))
         # dst = cv2.warpPerspective(image, Minv, (480, 480))
-        dst = cv2.warpPerspective(frame, Minv, img1.shape)
-        self.black_and_white_prototype(dst)
+        if Minv is None:
+            dst = frame
+        else:
+            dst = cv2.warpPerspective(frame, Minv, img1.shape)
+            self.black_and_white_prototype(dst)
         # plt.imshow(dst, 'gray')  # , plt.show()
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()

@@ -1,18 +1,32 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import skimage
 
 
 class RedDotDetector():
 
-    def interactive_train(self, frame):
+    def interactive_train(self, frame, min_area_coeficient=0.5):
         plt.imshow(frame)
 
         pts = plt.ginput(2)
 
+        plt.close()
         self.color_prototype_dot = frame[pts[0][::-1]]
         self.color_prototype_background = frame[pts[1][::-1]]
-        self.min_area = 500
+
+        self.thr = (self.color_prototype_dot.astype(np.int) +  
+                self.color_prototype_background.astype(np.int)) / 2
+
+        detector_image = (frame > self.thr).all(axis=2).astype(np.uint8)
+        imlabel = skimage.morphology.label(detector_image)
+        lab = imlabel[pts[0][::-1]]
+        sm = np.sum(imlabel==lab)
+
+
+
+        self.min_area = int(min_area_coeficient * sm)
+        import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
 
 #         params = cv2.SimpleBlobDetector_Params()
 #         # Change thresholds
@@ -32,8 +46,7 @@ class RedDotDetector():
 
     def detect(self, frame, return_detector_image=False):
 
-        thr = (self.color_prototype_dot.astype(np.int) +  
-                self.color_prototype_background.astype(np.int)) / 2
+        thr = self.thr
         detector_image = (frame > thr).all(axis=2).astype(np.uint8)
         # detector_image = np.average(detector_image, axis=2)
         # detector_image = np.mean(frame, axis=2).astype(np.uint8)

@@ -128,6 +128,7 @@ class ShootingGallery():
         # self.default_mode = 'paper'
         self.mode = 'projector' 
         self.mode = 'paper' 
+        self.mode = 1
         self.debugmode = 'N'
 
     def __show_keypoints(self, keypoints, frame):
@@ -183,7 +184,7 @@ class ShootingGallery():
             keypoints = self.dot_detector.detect(wframe)
 
             if self.debugmode == "N":
-                if self.mode == 'paper':
+                if self.mode == 1:
                     # smooth it
                     wframe = self.__show_keypoints(keypoints, wframe)
                     # Show it, if key pressed is 'Esc', exit the loop
@@ -203,6 +204,7 @@ class ShootingGallery():
                     # cv2.imshow('frame', frame)
                     wframe = np.transpose(wframe, axes=[1, 0, 2])
                     surf = makesurf(wframe)
+                print self.mode
                 self.screen.blit(surf, (0,0))
 
             if self.debugmode == "D":
@@ -212,11 +214,12 @@ class ShootingGallery():
             elif self.debugmode == "G":
                 self.screen.blit(makesurf(wframe), (0, 0))
             pygame.display.flip()        
-            self.clock.tick(20)                                  # omezení maximálního počtu snímků za sekundu
+            self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
             self.event_processing()
         return True
 
     def __prepare_scene(self, i):
+        self.mode = i
         pass
 
     def event_processing(self):

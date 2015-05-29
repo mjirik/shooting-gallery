@@ -13,4 +13,4 @@ max_score: 10
 option: "haf"
 # video_source: "http://192.168.1.60/snapshot.jpg"
 video_source: 1
-resolution: [640, 480]
+resolution: [1024, 768]

@@ -3,6 +3,10 @@ shooting-gallery
 
 Python shooting gallery
 
+Instalace
+
+    conda install -c tlatorre pygame opencv
+
 
 
 Kamera a papírový terč

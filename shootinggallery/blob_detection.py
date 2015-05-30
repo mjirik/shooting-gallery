@@ -5,6 +5,11 @@ import skimage
 
 
 class RedDotDetector():
+    def __init__(self):
+        self.detection_mode = 'continuous'
+        self.detection_mode = 'falling'
+        self.detection_mode = 'rising'
+        self.prev_keypoints = []
 
     def interactive_train(self, frame, min_area_coeficient=0.5):
         plt.imshow(frame)
@@ -26,7 +31,7 @@ class RedDotDetector():
 
 
         self.min_area = int(min_area_coeficient * sm)
-        import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+        # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
 
 #         params = cv2.SimpleBlobDetector_Params()
 #         # Change thresholds
@@ -44,7 +49,7 @@ class RedDotDetector():
 #         else :
 #             self.blob_detector = cv2.SimpleBlobDetector_create(params)
 
-    def detect(self, frame, return_detector_image=False):
+    def detect(self, frame, return_debug_image=False):
 
         thr = self.thr
         detector_image = (frame > thr).all(axis=2).astype(np.uint8)
@@ -65,11 +70,24 @@ class RedDotDetector():
         
         
         # keypoints = self.blob_detector.detect(detector_image)
+        okeypoints = keypoints
 
+        if self.detection_mode is 'rising':
+            if len(self.prev_keypoints) == 0:
+                okeypoints = keypoints
+            else:
+                okeypoints = []
+        elif self.detection_mode is 'falling':
+            if len(keypoints) == 0:
+                okeypoints = self.prev_keypoints
+            else:
+                okeypoints = []
 
-        if return_detector_image:
-            return keypoints, detector_image
-        return keypoints
+        self.prev_keypoints = keypoints
+
+        if return_debug_image:
+            return okeypoints, detector_image, imlab
+        return okeypoints
         # return red_dot_detection(
         #     frame,
         #     return_detector_image,
@@ -79,7 +97,7 @@ class RedDotDetector():
 
 class KeypointFake():
     def __init__(self, point):
-        self.pt = point
+        self.pt = point[::-1]
 
 
 def diff_dot_diff_detection(frame, init_frame):

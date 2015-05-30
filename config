@@ -6,7 +6,8 @@
 # option = haf
 # video_source = "http://192.168.1.60/snapshot.jpg"
 
-target_file: "480pxTarget.bmp"
+# target_file: "480pxTarget.bmp"
+target_file: "480pxTarget.png"
 target_center: [240,240]
 target_radius: 240
 max_score: 10
@@ -14,3 +15,30 @@ option: "haf"
 # video_source: "http://192.168.1.60/snapshot.jpg"
 video_source: 1
 resolution: [1024, 768]
+targets: {
+    'paper_target': {
+        'target_center': [320,240],
+        'target_radius': 240,
+        'heading': None,
+        'speed': 0,
+    },
+    'pig': {
+        'target_center':[240,240],
+        'target_radius': 240,
+        'speed': 30,
+        'heading': 'left'
+    },
+    'deer':{
+        'target_center':[240, 240],
+        'target_radius': 300,
+        'speed': 40,
+        'heading': None,
+    }
+}
+scenes: {
+    0:{
+        'impath': './FaceInHole/imgs/02.jpg',
+        'offset': [0, 0],
+        'zoom': 1.
+    }
+}

@@ -22,59 +22,28 @@ import numpy as np
 import blob_detection as bd
 import calib
 import expocomp
+from targets import Target
 
 
 def makesurf(pixels):
     try:
         surf = pygame.surfarray.make_surface(pixels)
     except IndexError:
+        if len(pixels.shape) == 2:
+            sh = pixels.shape
+            px = np.zeros([sh[0], sh[1], 3], dtype=pixels.dtype)
+
+            px[:, :, 0] = pixels[:, :]
+            px[:, :, 1] = pixels[:, :]
+            px[:, :, 2] = pixels[:, :]
+            pixels = px
         (width, height, colours) = pixels.shape
         surf = pygame.display.set_mode((width, height))
         pygame.surfarray.blit_array(surf, pixels)
     return surf
 
-class Target:
 
-    def __init__(self, center, radius, max_score, target_file):
-        self.center = np.asarray(center)
-        self.radius = radius
-        self.max_score = max_score
-        self.image = pygame.image.load(target_file)
-        self.score_coeficient = float(max_score) / float(radius)
 
-    def get_score(self, impact_point):
-        dist = np.linalg.norm(
-            self.center.astype(np.float) - np.asarray(impact_point))
-        score = self.max_score - (dist * self.score_coeficient)
-        return max(score, 0)
-
-    def draw_target(self, frame):
-        cv2.circle(frame,
-                   (self.center[0], self.center[1]),
-
-                   self.radius,
-                   (255, 100, 100),
-                   2)
-        cv2.circle(frame,
-                   (self.center[0], self.center[1]),
-                   self.radius/10,
-                   (255, 100, 100),
-                   2)
-
-    def tick(self):
-# TODO target movement
-        pass
-class Targets():
-    def __init__(self):
-        self.targets = []
-
-    def add_from_config(self, config):
-        for tg in config:
-            target = Target(**tg)
-            self.add(target)
-
-    def add(self, target):
-        self.targets.append(target)
 
 
 class FrameGetter():
@@ -93,6 +62,17 @@ class FrameGetter():
         res, frame = self.cap.read()
         return res, frame
 
+def read_surf(self, info):
+
+    if info is None or info == 'None':
+        return None, None
+    
+    surface = pygame.image.load(info['impath'])
+    # if self.config['flip']:
+    #     surface = pygame.transform.flip(surface, True, False)
+    # pygame.transform.scale(surface)
+    surface = pygame.transform.rotozoom(surface, 0, info['zoom'])
+    return surface, info['offset']
 
 class ShootingGallery():
 
@@ -163,6 +143,9 @@ class ShootingGallery():
                     cframe, 
                     self.calibration_surface.Minv, 
                     tuple(self.config['resolution']))
+        sh = self.calibration_surface.calibim_gray.shape
+        wframe[sh[0]:, :] = 0
+        wframe[:, sh[1]:] = 0
         return wframe, cframe
 
 
@@ -181,7 +164,10 @@ class ShootingGallery():
             # keypoints = bd.red_dot_detection(frame)
             # keypoints = bd.diff_dot_detection(frame, self.init_frame)
             # keypoints, frame = self.dot_detector.detect(frame, True)
-            keypoints = self.dot_detector.detect(wframe)
+            keypoints, det_img, lab_img = self.dot_detector.detect(
+                    wframe,
+                    return_debug_image=True
+                    )
 
             if self.debugmode == "N":
                 if self.mode == 1:
@@ -190,7 +176,7 @@ class ShootingGallery():
                     # Show it, if key pressed is 'Esc', exit the loop
 
                     self.print_status(wframe)
-                    self.target.draw_target(wframe)
+                    self.target.draw(wframe)
                     # cv2.imshow('frame', frame)
                     wframe = np.transpose(wframe, axes=[1, 0, 2])
                     surf = makesurf(wframe)
@@ -200,7 +186,7 @@ class ShootingGallery():
                     # Show it, if key pressed is 'Esc', exit the loop
 
                     self.print_status(wframe)
-                    self.target.draw_target(wframe)
+                    self.target.draw(wframe)
                     # cv2.imshow('frame', frame)
                     wframe = np.transpose(wframe, axes=[1, 0, 2])
                     surf = makesurf(wframe)
@@ -213,6 +199,10 @@ class ShootingGallery():
                 self.screen.blit(makesurf(cframe), (0, 0))
             elif self.debugmode == "G":
                 self.screen.blit(makesurf(wframe), (0, 0))
+            elif self.debugmode == "H":
+                self.screen.blit(makesurf(det_img*100), (0, 0))
+            elif self.debugmode == "J":
+                self.screen.blit(makesurf((lab_img + 1)*40), (0, 0))
             pygame.display.flip()        
             self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
             self.event_processing()
@@ -220,6 +210,10 @@ class ShootingGallery():
 
     def __prepare_scene(self, i):
         self.mode = i
+        import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+        scene_config = self.config['scenes'][0]
+        # read_surf(
+
         pass
 
     def event_processing(self):
@@ -267,17 +261,30 @@ class ShootingGallery():
                     import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
 
                 elif event.key == pygame.locals.K_d:
-                        self.debugmode = 'D' 
-                        print "debugmode D"
+                    self.debugmode = 'D' 
+                    print "debugmode D"
                 elif event.key == pygame.locals.K_f:
-                        self.debugmode = 'F' 
-                        print "debugmode F"
+                    self.debugmode = 'F' 
+                    print "debugmode F"
                 elif event.key == pygame.locals.K_g:
-                        self.debugmode = 'G' 
-                        print "debugmode G"
+                    self.debugmode = 'G' 
+                    print "debugmode G"
+                elif event.key == pygame.locals.K_h:
+                    self.debugmode = 'H' 
+                    print "debugmode H"
+                elif event.key == pygame.locals.K_j:
+                    self.debugmode = 'J' 
+                    print "debugmode J"
+                elif event.key == pygame.locals.K_k:
+                    self.debugmode = 'K' 
+                    print "debugmode K"
                 elif event.key == pygame.locals.K_n:
-                        self.debugmode = 'N' 
-                        print "debugmode N"
+                    self.debugmode = 'N' 
+                    print "debugmode N"
+                elif event.key == pygame.locals.K_c:
+                    print 'calibration'
+                    self.calibration()
+                        
                     # self.__prepare_scene(5)
 
     def calibration(self):
@@ -333,6 +340,7 @@ class ShootingGallery():
         self.background = self.background.convert()                   # převod vrstvy do vhodného formátu
         self.background.fill((0,0,255))                 
         self.clock = pygame.time.Clock()                         # časování
+        self.keepGoing = True
 
         pygame.display.flip()        
         self.clock.tick(5)                                  # omezení maximálního počtu snímků za sekundu
@@ -340,7 +348,7 @@ class ShootingGallery():
 
 
         print('Run')
-        while 1:
+        while self.keepGoing:
             # casovac.tick(20)
             # Ošetření vstupních událostí
             # for udalost in pygame.event.get():

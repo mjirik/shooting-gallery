@@ -38,6 +38,9 @@ class Calibration():
     def black_and_white_prototype(self, frame):
         imt_black = self.calibim_gray < 10
         imt_white = self.calibim_gray > 10
+        if imt_black.shape[0] != frame.shape[0]:
+            imt_black = np.rot90(imt_black)
+            imt_white = np.rot90(imt_white)
 
         # props_b = skimage.measure.regionprops(imt_black, frame)
         # props_w = skimage.measure.regionprops(imt_white, frame)

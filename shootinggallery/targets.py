@@ -19,12 +19,15 @@ import cv2
 
 class Target:
 
-    def __init__(self, center, radius, max_score, target_file):
+    def __init__(self, center, radius, max_score, impath, start=[0 , 0],
+            vector=[1, 1], speed=1.0, heading=None): 
         self.center = np.asarray(center)
         self.radius = radius
         self.max_score = max_score
-        self.image = pygame.image.load(target_file)
+        self.image = pygame.image.load(impath)
         self.score_coeficient = float(max_score) / float(radius)
+        self.start = np.asarray(start)
+        self.vector = np.asarray(vector)
 
     def get_score(self, impact_point):
         dist = np.linalg.norm(
@@ -46,8 +49,10 @@ class Target:
                    2)
 
     def tick(self):
+        self.center = self.center + self.vector
 # TODO target movement
         pass
+
 class Targets():
     def __init__(self):
         self.targets = []
@@ -61,10 +66,20 @@ class Targets():
         self.targets.append(target)
 
     def tick(self):
+        for tg in self.targets:
+            tg.tick()
         pass
+
     def draw(self, frame):
         for tg in self.targets:
             tg.draw(frame)
+
+    def get_score(self, pt):
+        sc = 0.0
+        for tg in self.targets:
+            sc += tg.get_score(pt)
+
+        return sc
 
 def main():
     logger = logging.getLogger()

@@ -8,7 +8,7 @@
 
 # target_file: "480pxTarget.bmp"
 target_file: "480pxTarget.png"
-target_center: [240,240]
+target_center: [320,240]
 target_radius: 240
 max_score: 10
 option: "haf"
@@ -17,22 +17,28 @@ video_source: 1
 resolution: [1024, 768]
 targets: {
     'paper_target': {
-        'target_center': [320,240],
-        'target_radius': 240,
+        'impath': "480pxTarget.png",
+        'center': [320, 240],
+        'radius': 240,
         'heading': None,
         'speed': 0,
+        'max_score': 10.0,
     },
     'pig': {
-        'target_center':[240,240],
-        'target_radius': 240,
+        'impath': None,
+        'center':[240, 240],
+        'radius': 240,
         'speed': 30,
-        'heading': 'left'
+        'heading': 'left',
+        'max_score': 10.0,
     },
     'deer':{
+        'impath': None,
         'target_center':[240, 240],
         'target_radius': 300,
         'speed': 40,
         'heading': None,
+        'max_score': 10.0,
     }
 }
 scenes: {

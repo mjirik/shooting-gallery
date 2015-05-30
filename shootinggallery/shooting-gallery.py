@@ -22,7 +22,7 @@ import numpy as np
 import blob_detection as bd
 import calib
 import expocomp
-from targets import Target
+from targets import Target, Targets
 
 
 def makesurf(pixels):
@@ -92,6 +92,9 @@ class ShootingGallery():
             10,
             config['target_file']
         )
+        target = Target(**config['targets']['paper_target'])
+        targets = Targets()
+        targets.add(target)
         self.calibration_surface = calib.Calibration(config['target_file'])
         video_source = config['video_source']
 # create video capture
@@ -104,7 +107,7 @@ class ShootingGallery():
         # else:
         #     self.target = target
         self.status_text = ""
-        self.target = target
+        self.targets = targets
         # self.default_mode = 'paper'
         self.mode = 'projector' 
         self.mode = 'paper' 
@@ -124,7 +127,7 @@ class ShootingGallery():
 
             if i == 0:
                 self.status_text = "%.2f" % (
-                    self.target.get_score([cx, cy]))
+                    self.targets.get_score([cx, cy]))
                 print self.status_text
         return frame
 
@@ -176,7 +179,8 @@ class ShootingGallery():
                     # Show it, if key pressed is 'Esc', exit the loop
 
                     self.print_status(wframe)
-                    self.target.draw(wframe)
+                    self.targets.tick()
+                    self.targets.draw(wframe)
                     # cv2.imshow('frame', frame)
                     wframe = np.transpose(wframe, axes=[1, 0, 2])
                     surf = makesurf(wframe)

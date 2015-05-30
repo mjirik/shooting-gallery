@@ -93,7 +93,8 @@ class ShootingGallery():
             config['target_file']
         )
         target = Target(**config['targets']['paper_target'])
-        targets = Targets()
+        # targets = Targets()
+        targets = pygame.sprite.Group()
         targets.add(target)
         self.calibration_surface = calib.Calibration(config['target_file'])
         video_source = config['video_source']
@@ -160,8 +161,10 @@ class ShootingGallery():
         # read the frames
         ret, frame = self.cap.read()
         if ret:
+            deltat = self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
 
             wframe, cframe = self.__camera_image_processing(frame)
+            self.event_processing()
 
 
             # keypoints = bd.red_dot_detection(frame)
@@ -175,15 +178,16 @@ class ShootingGallery():
             if self.debugmode == "N":
                 if self.mode == 1:
                     # smooth it
-                    wframe = self.__show_keypoints(keypoints, wframe)
+                    # wframe = self.__show_keypoints(keypoints, wframe)
                     # Show it, if key pressed is 'Esc', exit the loop
 
-                    self.print_status(wframe)
-                    self.targets.tick()
-                    self.targets.draw(wframe)
+                    # self.print_status(wframe)
+                    # self.targets.draw(wframe)
                     # cv2.imshow('frame', frame)
-                    wframe = np.transpose(wframe, axes=[1, 0, 2])
-                    surf = makesurf(wframe)
+                    # wframe = np.transpose(wframe, axes=[1, 0, 2])
+                    # surf = makesurf(wframe)
+                    self.targets.update(deltat)
+                    self.targets.draw(self.screen)
                 elif self.mode == 'projector':
 # TODO projector mode
                     wframe = self.__show_keypoints(keypoints, self.target.image)
@@ -194,8 +198,8 @@ class ShootingGallery():
                     # cv2.imshow('frame', frame)
                     wframe = np.transpose(wframe, axes=[1, 0, 2])
                     surf = makesurf(wframe)
-                print self.mode
-                self.screen.blit(surf, (0,0))
+                # print self.mode
+                # self.screen.blit(surf, (0,0))
 
             if self.debugmode == "D":
                 self.screen.blit(makesurf(frame), (0, 0))
@@ -208,8 +212,6 @@ class ShootingGallery():
             elif self.debugmode == "J":
                 self.screen.blit(makesurf((lab_img + 1)*40), (0, 0))
             pygame.display.flip()        
-            self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
-            self.event_processing()
         return True
 
     def __prepare_scene(self, i):

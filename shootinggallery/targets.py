@@ -17,10 +17,11 @@ import numpy as np
 import pygame
 import cv2
 
-class Target:
+class Target(pygame.sprite.Sprite):
 
     def __init__(self, center, radius, max_score, impath, start=[0 , 0],
-            vector=[1, 1], speed=1.0, heading=None): 
+            vector=[1, 1], speed=1.0, heading=None, lifeticks=None):
+        pygame.sprite.Sprite.__init__(self)
         self.center = np.asarray(center)
         self.radius = radius
         self.max_score = max_score
@@ -28,14 +29,25 @@ class Target:
         self.score_coeficient = float(max_score) / float(radius)
         self.start = np.asarray(start)
         self.vector = np.asarray(vector)
+        self.lifeticks = lifeticks
+        if impath is "None":
+            self.src_image = self.image = pygame.Surface([radius * 2, radius * 2])
+        else:
+            self.src_image=pygame.image.load(impath)
+        self.image = self.src_image
+        pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
+        self.rect = self.image.get_rect()
+        self.position = 1.0 * self.center
+        self.rect.center = self.position
+        self.delete = False
 
     def get_score(self, impact_point):
         dist = np.linalg.norm(
-            self.center.astype(np.float) - np.asarray(impact_point))
+            self.position + self.center.astype(np.float) - np.asarray(impact_point))
         score = self.max_score - (dist * self.score_coeficient)
         return max(score, 0)
 
-    def draw(self, frame):
+    def _draw(self, frame):
         cv2.circle(frame,
                    (self.center[0], self.center[1]),
 
@@ -48,8 +60,13 @@ class Target:
                    (255, 100, 100),
                    2)
 
-    def tick(self):
-        self.center = self.center + self.vector
+    def update(self, deltat):
+        self.position = self.position + deltat * 0.001 * self.vector
+        self.rect.center = self.position
+        if self.lifeticks is not None:
+            self.lifeticks -= 1
+            if self.lifeticks < 0:
+                self.delete = True
 # TODO target movement
         pass
 
@@ -68,6 +85,8 @@ class Targets():
     def tick(self):
         for tg in self.targets:
             tg.tick()
+            if tg.delete:
+                self.targets.remove(tg)
         pass
 
     def draw(self, frame):

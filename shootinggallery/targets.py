@@ -25,31 +25,36 @@ class Target(pygame.sprite.Sprite):
     """
 
     def __init__(self, center, radius, max_score, impath, start=[0 , 0],
-            vector=[1, 1], speed=1.0, heading=None, lifeticks=None):
+            vector=[1, 1], speed=1.0, heading=None, lifetime=None, zoom=1.0):
         pygame.sprite.Sprite.__init__(self)
-        self.center = np.asarray(center)
-        self.radius = radius
+        self.center = (np.asarray(center) * zoom).astype(np.int)
+        self.radius = int(radius * zoom)
         self.max_score = max_score
-        self.image = pygame.image.load(impath)
+        # self.image = pygame.image.load(impath)
         self.score_coeficient = float(max_score) / float(radius)
         self.start = np.asarray(start)
         self.vector = np.asarray(vector)
-        self.lifeticks = lifeticks
+        self.lifetime = lifetime
         if impath is "None":
             self.src_image = self.image = pygame.Surface([radius * 2, radius * 2])
         else:
             self.src_image=pygame.image.load(impath)
-        self.image = self.src_image
-        pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
+        self.image = pygame.transform.rotozoom(self.src_image, 0, zoom)
+        # pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
         self.rect = self.image.get_rect()
-        self.position = 1.0 * self.center
+        self.position = 1.0 * np.asarray(start)
         self.rect.center = self.position
+        # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
+
+        pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
         self.delete = False
 
     def get_score(self, impact_point):
 
         dist = np.linalg.norm(
-            self.position.astype(np.float) - np.asarray(impact_point))
+                np.array([self.rect.left, self.rect.top]) + self.center
+            # self.position.astype(np.float)
+            - np.asarray(impact_point))
         score = self.max_score - (dist * self.score_coeficient)
         return max(score, 0)
 
@@ -68,17 +73,35 @@ class Target(pygame.sprite.Sprite):
 
     def update(self, deltat):
         # self.rect = self.rect.move(self.vector * deltat * 0.01)
-        print 've' , self.vector
-        print 'rc' , self.rect.center
-        print 'po' , self.position
+        # print 've' , self.vector
+        # print 'rc' , self.rect.center
+        # print 'po' , self.position
         self.position = self.position + deltat * 0.001 * self.vector
         self.rect.center = self.position
-        if self.lifeticks is not None:
-            self.lifeticks -= 1
-            if self.lifeticks < 0:
+        if self.lifetime is not None:
+            self.lifetime -= (deltat * 0.001)
+            if self.lifetime < 0:
                 self.delete = True
+                self.kill()
 # TODO target movement
         pass
+
+class TargetGenerator():
+    def __init__(self, target_generator_config): 
+        selg.tgg_config = target_generator_config
+        self.time = 0.5
+        self.target_list = None
+
+    def update(self, deltat):
+        self.time -= deltat
+        if self.time < 0:
+            self.time = 10.0
+
+            
+
+
+        
+
 
 class Targets():
     def __init__(self):

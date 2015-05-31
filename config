@@ -23,36 +23,106 @@ targets: {
         'heading': None,
         'speed': 15,
         'max_score': 10.0,
-        'vector': [2, 3]
+        'vector': [0, 0],
+        'start': [320, 240],
+    },
+    'paper_target_alpha': {
+        'impath': None,
+        'center': [320, 240],
+        'radius': 240,
+        'heading': None,
+        'speed': 15,
+        'max_score': 10.0,
+        'vector': [0, 0],
+        'start': [320, 240],
     },
     'pig': {
-        'impath': 'shootinggallerry/imgs/pig.png',
-        'center':[240, 240],
-        'radius': 240,
+        'impath': 'shootinggallery/imgs/pig.png',
+        'center':[640, 330],
+        'radius': 160,
+        'speed': 60,
+        'heading': 'left',
+        'max_score': 10.0,
+        'vector': [45, 5],
+        'lifetime': 25.0,
+        'zoom': 0.2,
+        'start': [-20, 350]
+
+    },
+    'pig2': {
+        'impath': 'shootinggallery/imgs/pig.png',
+        'center':[640, 330],
+        'radius': 160,
         'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [5, 5],
+        'vector': [30, -3],
+        'lifetime': 25.0,
+        'zoom': 0.1,
+        'start': [-20, 370]
+
     },
     'deer':{
-        'impath': None,
-        'target_center':[240, 240],
-        'target_radius': 300,
-        'speed': 40,
-        'heading': None,
+        'impath': 'shootinggallery/imgs/deer.png',
+        'center':[600, 480],
+        'radius': 80,
+        'speed': 30,
+        'heading': 'left',
         'max_score': 10.0,
+        'vector': [35, -3],
+        'lifetime': 20.0,
+        'zoom': 0.3,
+        'start': [-20, 300]
     }
 }
 scenes: {
     0:{
-        'background': {
-            'impath': "480pxTarget.png",
-            'offset': [0, 0],
-            'zoom' : 1.0
-            },
+        'background': None,
         'foreground': None,
         'impath': './FaceInHole/imgs/02.jpg',
         'offset': [0, 0],
-        'zoom': 1.
-    }
+        'zoom': 1.0,
+        'targets':[{
+            'target_key': 'paper_target',
+            'start' : [10, 10],
+            'mean_time': None,
+        }]
+    },
+    1:{
+        'background': {
+            'impath': './shootinggallery/imgs/02.jpg',
+            'offset': [0, 0],
+            'zoom' : 0.25
+            },
+        'foreground': None,
+        # 'impath': './FaceInHole/imgs/02.jpg',
+        # 'offset': [0, 0],
+        # 'zoom': 0.2,
+        'targets':[{
+            'target_key': 'pig',
+            'start' : [10, 10],
+            'mean_time': 5,
+        },{
+            'target_key': 'pig2',
+            'start' : [30, 30],
+            'mean_time': 10,
+        },{
+            'target_key': 'deer',
+            'start' : [30, 30],
+            'mean_time': 15,
+        }
+
+        ]
+    },
+    2:{
+        'background': 'frame',
+        'foreground': None,
+        'offset': [0, 0],
+        'zoom': 1.0,
+        'targets':[{
+            'target_key': 'paper_target_alpha',
+            'start' : [10, 10],
+            'mean_time': None,
+        }]
+    },
 }

@@ -18,6 +18,7 @@ import pygame.locals
 import pygame.image
 import yaml
 import numpy as np
+import random
 
 import blob_detection as bd
 import calib
@@ -128,6 +129,7 @@ class ShootingGallery():
         # video_source = "http://192.168.1.60/snapshot.jpg"
         # self.cap = cv2.VideoCapture(video_source)
         self.cap = FrameGetter(video_source)
+        self.elapsed = 0
         # if target is None:
         #     self.target = Target([300, 300], 200, 10)
         # else:
@@ -210,11 +212,24 @@ class ShootingGallery():
                     )
 
             if self.debugmode == "N":
+                if self.elapsed is not None:
+                    self.elapsed -= deltat
+                    if self.elapsed < 0:
+                        scene_config = self.config['scenes'][self.mode]
+                        rng = random.randint(0,len(scene_config['targets'])-1)
+                        new_tg_key = scene_config['targets'][rng]['target_key']
+                        new_tg_gen_config = scene_config['targets'][rng]
+                        tg_config = self.config['targets'][new_tg_key]
+                        if new_tg_gen_config['mean_time'] == 'None':
+                            self.elapsed = None
+                        else:
+                            self.elapsed = (0.5 + random.random()) * 1000 * new_tg_gen_config['mean_time']
+                        
+                        self.targets.add(Target(**tg_config))
                 self.__blit_surf_or_frame(self.background, wframe)
                 # self.screen.blit(makesurf(frame), (0, 0))
                 self.targets.update(deltat)
                 self.targets.draw(self.screen)
-                print keypoints
                 self.__show_keypoints(keypoints, self.screen)
                 self.print_status(self.screen)
 
@@ -238,6 +253,9 @@ class ShootingGallery():
 
         self.background, self.background_offset = read_surf(scene_config['background'])
         self.foreground, self.foreground_offset = read_surf(scene_config['foreground'])
+        self.targets.empty()
+        self.elapsed = 0
+
         # read_surf(
 
 
@@ -374,15 +392,6 @@ class ShootingGallery():
 
         print('Run')
         while self.keepGoing:
-            # casovac.tick(20)
-            # Ošetření vstupních událostí
-            # for udalost in pygame.event.get():
-            #     if udalost.type == pygame.locals.QUIT:
-            #         return
-            #     elif (udalost.type == pygame.locals.KEYDOWN and
-            #           udalost.key == pygame.locals.K_ESCAPE):
-            #         return
-            # casovac = pygame.time.Clock()
 
             self.tick()
 

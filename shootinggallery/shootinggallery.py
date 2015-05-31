@@ -115,22 +115,24 @@ class ShootingGallery():
         self.mode = 1
         self.debugmode = 'N'
 
-    def __show_keypoints(self, keypoints, frame):
+    def __show_keypoints(self, keypoints, screen):
         for i, keypoint in enumerate(keypoints):
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
 # each next point is bigger, just to recognize them
-            cv2.circle(frame, (cx, cy), 10 + i,
-                       (100, 255, 255),
-                       -1)
-            # cv2.circle(frame,keypoints[0].pt,5,255,-1)
-            # print self.target.get_score([cx,cy])
+            pygame.draw.circle(screen, (100, 255, 255), (cx, cy), i+10, 5)
+
+            # cv2.circle(frame, (cx, cy), 10 + i,
+            #            (100, 255, 255),
+            #            -1)
 
             if i == 0:
-                self.status_text = "%.2f" % (
-                    self.targets.get_score([cx, cy]))
+                sc = 0.0
+                for tg in self.targets:
+                    sc += tg.get_score([cx, cy])
+                self.status_text = "%.2f" % (sc)
                 print self.status_text
-        return frame
+        return screen
 
     def __camera_image_processing(self, frame):
         """
@@ -178,7 +180,6 @@ class ShootingGallery():
             if self.debugmode == "N":
                 if self.mode == 1:
                     # smooth it
-                    # wframe = self.__show_keypoints(keypoints, wframe)
                     # Show it, if key pressed is 'Esc', exit the loop
 
                     # self.print_status(wframe)
@@ -188,6 +189,8 @@ class ShootingGallery():
                     # surf = makesurf(wframe)
                     self.targets.update(deltat)
                     self.targets.draw(self.screen)
+                    self.__show_keypoints(keypoints, self.screen)
+                    self.print_status(self.screen)
                 elif self.mode == 'projector':
 # TODO projector mode
                     wframe = self.__show_keypoints(keypoints, self.target.image)
@@ -373,12 +376,16 @@ class ShootingGallery():
         cv2.destroyAllWindows()
         self.cap.release()
 
-    def print_status(self, frame):
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(
-            frame,
-            self.status_text,
-            (10, 100), font, 4, (100, 100, 255), 4)  # ,2,cv2.LINE_AA)
+    def print_status(self, screen):
+        self.status_text = "TEST"
+        font=pygame.font.Font(None,110)
+        scoretext=font.render(self.status_text, 3,(50,150,50))
+        screen.blit(scoretext, (10, 10))
+        # font = cv2.FONT_HERSHEY_SIMPLEX
+        # cv2.putText(
+        #     frame,
+        #     self.status_text,
+        #     (10, 100), font, 4, (100, 100, 255), 4)  # ,2,cv2.LINE_AA)
 
 
 def main():

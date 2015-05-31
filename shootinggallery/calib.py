@@ -21,9 +21,14 @@ import skimage.measure
 
 
 class Calibration():
-    def __init__(self, target_file, show_function=None):
+    def __init__(self, target_file, show_function=None, transpose=False):
+        """
+        transpose can be used when working with pygame
+        """
         self.target_file = target_file
         self.calibim = cv2.imread(self.target_file)          # queryImage
+        if transpose:
+            self.calibim = cv2.transpose(self.calibim)
         self.calibim_gray = cv2.cvtColor(self.calibim, cv2.COLOR_BGR2GRAY)
         self.Minv = None
         # if show_function is None:
@@ -39,8 +44,10 @@ class Calibration():
         imt_black = self.calibim_gray < 10
         imt_white = self.calibim_gray > 10
         if imt_black.shape[0] != frame.shape[0]:
-            imt_black = np.rot90(imt_black)
-            imt_white = np.rot90(imt_white)
+            # imt_black = cv2.transpose(imt_black)
+            # imt_white = cv2.transpose(imt_white)
+            imt_black = np.transpose(imt_black)
+            imt_white = np.transpose(imt_white)
 
         # props_b = skimage.measure.regionprops(imt_black, frame)
         # props_w = skimage.measure.regionprops(imt_white, frame)

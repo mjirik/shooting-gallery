@@ -23,14 +23,16 @@ targets: {
         'heading': None,
         'speed': 15,
         'max_score': 10.0,
+        'vector': [2, 3]
     },
     'pig': {
-        'impath': None,
+        'impath': 'shootinggallerry/imgs/pig.png',
         'center':[240, 240],
         'radius': 240,
         'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
+        'vector': [5, 5],
     },
     'deer':{
         'impath': None,
@@ -43,6 +45,12 @@ targets: {
 }
 scenes: {
     0:{
+        'background': {
+            'impath': "480pxTarget.png",
+            'offset': [0, 0],
+            'zoom' : 1.0
+            },
+        'foreground': None,
         'impath': './FaceInHole/imgs/02.jpg',
         'offset': [0, 0],
         'zoom': 1.

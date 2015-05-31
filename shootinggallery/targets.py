@@ -18,6 +18,11 @@ import pygame
 import cv2
 
 class Target(pygame.sprite.Sprite):
+    """
+    self.position is the same as self.rect.center
+    center is not used any more. in the future there will be connection 
+    between self.center and self.position
+    """
 
     def __init__(self, center, radius, max_score, impath, start=[0 , 0],
             vector=[1, 1], speed=1.0, heading=None, lifeticks=None):
@@ -42,8 +47,9 @@ class Target(pygame.sprite.Sprite):
         self.delete = False
 
     def get_score(self, impact_point):
+
         dist = np.linalg.norm(
-            self.position + self.center.astype(np.float) - np.asarray(impact_point))
+            self.position.astype(np.float) - np.asarray(impact_point))
         score = self.max_score - (dist * self.score_coeficient)
         return max(score, 0)
 
@@ -61,6 +67,10 @@ class Target(pygame.sprite.Sprite):
                    2)
 
     def update(self, deltat):
+        # self.rect = self.rect.move(self.vector * deltat * 0.01)
+        print 've' , self.vector
+        print 'rc' , self.rect.center
+        print 'po' , self.position
         self.position = self.position + deltat * 0.001 * self.vector
         self.rect.center = self.position
         if self.lifeticks is not None:

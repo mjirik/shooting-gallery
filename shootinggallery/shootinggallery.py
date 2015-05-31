@@ -25,7 +25,13 @@ import expocomp
 from targets import Target, Targets
 
 
-def makesurf(pixels):
+def np2surf(pixels, transpose=True):
+    if transpose:
+        # pixels = cv2.transpose(pixels)
+        if len(pixels.shape) == 3:
+            pixels = np.transpose(pixels, axes=[1, 0, 2])
+        else:
+            pixels = np.transpose(pixels, axes=[1, 0])
     try:
         surf = pygame.surfarray.make_surface(pixels)
     except IndexError:
@@ -48,21 +54,40 @@ def makesurf(pixels):
 
 class FrameGetter():
     """
-    unused will be removed
+    Can be used for reading image or video from file or url
     """
-    def __init__(self, video_source=0):
+    def __init__(self, video_source=0, rot90=False, color='RGB'):
+        self.rot90 = rot90
+        self.color = color
         self.video_source = video_source
-        if video_source == 0:
-            self.cap = cv2.VideoCapture(0)
-        else:
+
+        try:
+            file = cStringIO.StringIO(urllib.urlopen(video_source).read())
+            img = scipy.misc.imread(file)
+            self.useopencv = False
+        except:
+            self.useopencv = True 
+
+        if self.useopencv:
             self.cap = cv2.VideoCapture(self.video_source)
-            pass
 
     def read(self):
-        res, frame = self.cap.read()
+        if self.useopencv:
+            res, frame = self.cap.read()
+            if self.color is "RGB":
+                frame = frame[:,:, ::-1]
+            if self.rot90:
+                frame = cv2.transpose(frame)
+        else:
+            file = cStringIO.StringIO(urllib.urlopen(video_source).read())
+            frame = scipy.misc.imread(file)
+            res = True
+            if self.rot90:
+                frame = np.rot90(frame)
+
         return res, frame
 
-def read_surf(self, info):
+def read_surf(info):
 
     if info is None or info == 'None':
         return None, None
@@ -112,7 +137,7 @@ class ShootingGallery():
         # self.default_mode = 'paper'
         self.mode = 'projector' 
         self.mode = 'paper' 
-        self.mode = 1
+        self.mode = 0
         self.debugmode = 'N'
 
     def __show_keypoints(self, keypoints, screen):
@@ -154,6 +179,13 @@ class ShootingGallery():
         wframe[:, sh[1]:] = 0
         return wframe, cframe
 
+    def __blit_surf_or_frame(self, surf, frame):
+        pos = (0, 0)
+        if surf == 'frame':
+            surf = np2surf(frame)
+
+        if surf is not None:
+            self.screen.blit(surf, pos)
 
 
     def tick(self):
@@ -163,7 +195,7 @@ class ShootingGallery():
         # read the frames
         ret, frame = self.cap.read()
         if ret:
-            deltat = self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
+            deltat = self.clock.tick(20)                                  # omezení maximálního počtu snímků za sekundu
 
             wframe, cframe = self.__camera_image_processing(frame)
             self.event_processing()
@@ -178,52 +210,36 @@ class ShootingGallery():
                     )
 
             if self.debugmode == "N":
-                if self.mode == 1:
-                    # smooth it
-                    # Show it, if key pressed is 'Esc', exit the loop
+                self.__blit_surf_or_frame(self.background, wframe)
+                # self.screen.blit(makesurf(frame), (0, 0))
+                self.targets.update(deltat)
+                self.targets.draw(self.screen)
+                print keypoints
+                self.__show_keypoints(keypoints, self.screen)
+                self.print_status(self.screen)
 
-                    # self.print_status(wframe)
-                    # self.targets.draw(wframe)
-                    # cv2.imshow('frame', frame)
-                    # wframe = np.transpose(wframe, axes=[1, 0, 2])
-                    # surf = makesurf(wframe)
-                    self.targets.update(deltat)
-                    self.targets.draw(self.screen)
-                    self.__show_keypoints(keypoints, self.screen)
-                    self.print_status(self.screen)
-                elif self.mode == 'projector':
-# TODO projector mode
-                    wframe = self.__show_keypoints(keypoints, self.target.image)
-                    # Show it, if key pressed is 'Esc', exit the loop
-
-                    self.print_status(wframe)
-                    self.target.draw(wframe)
-                    # cv2.imshow('frame', frame)
-                    wframe = np.transpose(wframe, axes=[1, 0, 2])
-                    surf = makesurf(wframe)
-                # print self.mode
-                # self.screen.blit(surf, (0,0))
-
+            print self.debugmode
             if self.debugmode == "D":
-                self.screen.blit(makesurf(frame), (0, 0))
+                self.screen.blit(np2surf(frame), (0, 0))
             elif self.debugmode == "F":
-                self.screen.blit(makesurf(cframe), (0, 0))
+                self.screen.blit(np2surf(cframe), (0, 0))
             elif self.debugmode == "G":
-                self.screen.blit(makesurf(wframe), (0, 0))
+                self.screen.blit(np2surf(wframe), (0, 0))
             elif self.debugmode == "H":
-                self.screen.blit(makesurf(det_img*100), (0, 0))
+                self.screen.blit(np2surf(det_img*100), (0, 0))
             elif self.debugmode == "J":
-                self.screen.blit(makesurf((lab_img + 1)*40), (0, 0))
+                self.screen.blit(np2surf((lab_img + 1)*40), (0, 0))
             pygame.display.flip()        
         return True
 
     def __prepare_scene(self, i):
         self.mode = i
-        import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
-        scene_config = self.config['scenes'][0]
+        scene_config = self.config['scenes'][i]
+
+        self.background, self.background_offset = read_surf(scene_config['background'])
+        self.foreground, self.foreground_offset = read_surf(scene_config['foreground'])
         # read_surf(
 
-        pass
 
     def event_processing(self):
         for event in pygame.event.get():
@@ -325,12 +341,11 @@ class ShootingGallery():
         print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
         
         self.dot_detector = bd.RedDotDetector()
-        self.dot_detector.interactive_train(frame_with_dot) #pts[0], pts[1])
+        self.dot_detector.interactive_train(frame_with_dot, min_area_coeficient=0.4) #pts[0], pts[1])
 
     def __calib_show_function(self, frame):
 
-        frame = np.transpose(frame, axes=[1, 0, 2])
-        surf = makesurf(frame)
+        surf = np2surf(frame)
         self.screen.blit(surf, (0,0))
         pygame.display.flip()        
         self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
@@ -354,6 +369,7 @@ class ShootingGallery():
         pygame.display.flip()        
         self.clock.tick(5)                                  # omezení maximálního počtu snímků za sekundu
         self.calibration()
+        self.__prepare_scene(self.mode)
 
 
         print('Run')
@@ -377,7 +393,7 @@ class ShootingGallery():
         self.cap.release()
 
     def print_status(self, screen):
-        self.status_text = "TEST"
+        # self.status_text = "S " + self.status_text 
         font=pygame.font.Font(None,110)
         scoretext=font.render(self.status_text, 3,(50,150,50))
         screen.blit(scoretext, (10, 10))

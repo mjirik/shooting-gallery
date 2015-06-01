@@ -43,10 +43,10 @@ targets: {
         'speed': 60,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [45, 5],
+        'vector': [65, 5],
         'lifetime': 25.0,
         'zoom': 0.2,
-        'start': [-20, 350]
+        'start': [-20, 650]
 
     },
     'pig2': {
@@ -56,32 +56,44 @@ targets: {
         'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [30, -3],
+        'vector': [40, -3],
         'lifetime': 25.0,
         'zoom': 0.1,
-        'start': [-20, 370]
+        'start': [-20, 670]
 
     },
     'deer':{
         'impath': 'shootinggallery/imgs/deer.png',
-        'center':[600, 480],
+        'center':[600, 470],
         'radius': 80,
         'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [35, -3],
+        'vector': [55, -3],
         'lifetime': 20.0,
         'zoom': 0.3,
-        'start': [-20, 300]
+        'start': [-20, 680]
+    },
+    'deer2':{
+        'impath': 'shootinggallery/imgs/deer.png',
+        'center':[600, 470],
+        'radius': 80,
+        'speed': 30,
+        'heading': 'left',
+        'max_score': 10.0,
+        'vector': [195, 1],
+        'lifetime': 20.0,
+        'zoom': 0.3,
+        'start': [-20, 650]
     }
 }
 scenes: {
     0:{
         'background': None,
         'foreground': None,
-        'impath': './FaceInHole/imgs/02.jpg',
         'offset': [0, 0],
         'zoom': 1.0,
+        'fontsize': 512,
         'targets':[{
             'target_key': 'paper_target',
             'start' : [10, 10],
@@ -101,15 +113,19 @@ scenes: {
         'targets':[{
             'target_key': 'pig',
             'start' : [10, 10],
-            'mean_time': 5,
+            'mean_time': 8,
         },{
             'target_key': 'pig2',
             'start' : [30, 30],
-            'mean_time': 10,
+            'mean_time': 11,
         },{
             'target_key': 'deer',
             'start' : [30, 30],
-            'mean_time': 15,
+            'mean_time': 19,
+        },{
+            'target_key': 'deer2',
+            'start' : [30, 30],
+            'mean_time': 21,
         }
 
         ]

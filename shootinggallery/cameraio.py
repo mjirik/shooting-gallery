@@ -18,6 +18,7 @@ import cv2
 import cStringIO
 import scipy
 import scipy.misc
+import cv
 
 def np2surf(pixels, transpose=True):
     import pygame
@@ -49,7 +50,11 @@ class FrameGetter():
     """
     Can be used for reading image or video from file or url
     """
-    def __init__(self, video_source=0, rot90=False, color='RGB'):
+    def __init__(self, video_source=0, rot90=False, color='RGB', resolution=None):
+        """
+        resolution works only for opencv
+        """
+        resolution
         self.rot90 = rot90
         self.color = color
         self.video_source = video_source
@@ -63,6 +68,9 @@ class FrameGetter():
 
         if self.useopencv:
             self.cap = cv2.VideoCapture(self.video_source)
+            if resolution is not None:
+                self.cap.set(cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
+                self.cap.set(cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
 
     def read(self):
         if self.useopencv:

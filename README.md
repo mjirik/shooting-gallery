@@ -30,3 +30,7 @@ Testovací obrázky pro RANSAC:
 
 http://read.pudn.com/downloads194/sourcecode/windows/other/911730/box_in_scene.png
 http://read.pudn.com/downloads194/sourcecode/windows/other/911730/box.png
+
+
+Zvuky pocházejí z 
+http://soundbible.com/tags-gun.html

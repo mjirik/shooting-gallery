@@ -18,6 +18,7 @@ class RedDotDetector():
         self.detection_mode = 'rising'
         self.prev_keypoints = []
         self.min_area_coeficient = 0.5
+        self.gaussian_filter_sigma = 0.9
 
     def interactive_train(self, frame, min_area_coeficient=None):
         """
@@ -52,6 +53,10 @@ class RedDotDetector():
         self.min_area = int(self.min_area_coeficient * sm)
 
     def detect(self, frame, return_debug_image=False):
+        # from skimage.filter import gaussian_filter
+        if self.gaussian_filter_sigma is not None:
+            frame = cv2.GaussianBlur(frame,(5,5),self.gaussian_filter_sigma)
+            # frame = gaussian_filter(frame, self.gaussian_filter_sigma)
 
         thr = self.thr
         detector_image = (frame > thr).all(axis=2).astype(np.uint8)

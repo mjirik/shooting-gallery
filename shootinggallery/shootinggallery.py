@@ -77,7 +77,8 @@ class ShootingGallery():
         # video_source = 0
         # video_source = "http://192.168.1.60/snapshot.jpg"
         # self.cap = cv2.VideoCapture(video_source)
-        self.cap = FrameGetter(video_source)
+        # self.cap = FrameGetter(video_source, resolution=[800, 600])
+        self.cap = FrameGetter(video_source, resolution=[640, 480])
         self.elapsed = 0
         # if target is None:
         #     self.target = Target([300, 300], 200, 10)
@@ -146,7 +147,7 @@ class ShootingGallery():
         # read the frames
         ret, frame = self.cap.read()
         if ret:
-            deltat = self.clock.tick(20)                                  # omezení maximálního počtu snímků za sekundu
+            deltat = self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
 
             wframe, cframe = self.__camera_image_processing(frame)
             self.event_processing()
@@ -198,7 +199,7 @@ class ShootingGallery():
 
     def __prepare_scene(self, i):
         self.mode = i
-        scene_config = {'fontsize': 80}
+        scene_config = {'fontsize': 110}
         scene_config.update(self.config['scenes'][i])
 
         self.background, self.background_offset = read_surf(scene_config['background'])
@@ -316,7 +317,7 @@ class ShootingGallery():
         else:
             # self.dot_detector.min_area_coeficient = 0.4
             # self.dot_detector.thr = self.calibration_surface.max_white
-            self.dot_detector.thr = self.calibration_surface.mean_white + 2 * (self.calibration_surface.var_white**0.5)
+            self.dot_detector.thr = self.calibration_surface.mean_white + 1.2 * (self.calibration_surface.var_white**0.5)
             self.dot_detector.min_area = 15
 
 
@@ -362,7 +363,7 @@ class ShootingGallery():
 
     def print_status(self, screen):
         # self.status_text = "S " + self.status_text 
-        font=pygame.font.Font(None,110)
+        font=pygame.font.Font(None, self.fontsize)
         scoretext=font.render(self.status_text, 3,(50,150,50))
         screen.blit(scoretext, (10, 10))
         # font = cv2.FONT_HERSHEY_SIMPLEX

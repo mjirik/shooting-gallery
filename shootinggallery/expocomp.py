@@ -83,7 +83,6 @@ class AutomaticExposureCompensation():
         # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
         # print np.max(frame)
         comp = self.mean/mean
-        print comp
         newframe = frame * comp 
 
         # print np.max(newframe)

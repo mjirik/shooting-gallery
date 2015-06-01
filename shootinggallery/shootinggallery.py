@@ -19,6 +19,7 @@ import pygame.image
 import yaml
 import numpy as np
 import random
+import os
 
 import blob_detection as bd
 import calib
@@ -26,7 +27,7 @@ import expocomp
 from targets import Target, Targets
 from cameraio import FrameGetter, np2surf
 
-sound_library = {}
+_sound_library = {}
 
 def play_sound(path):
   global _sound_library
@@ -48,6 +49,58 @@ def read_surf(info):
     # pygame.transform.scale(surface)
     surface = pygame.transform.rotozoom(surface, 0, info['zoom'])
     return surface, info['offset']
+
+class GameModel():
+    def __init__(self, game_time=60, free=False):
+        self.state = 'waiting'
+        if free:
+            self.state = 'free'
+        self.score = 0
+        self.prev_score = 0
+        self.time = 0
+        self.game_time = game_time * 1000
+        self.scoreboard_time = 10 * 1000
+
+    def start(self):
+        if self.state == 'waiting':
+            self.state = 'running'
+            self.time = self.game_time
+            self.score = 0
+            self.prev_score = 0
+
+    def add_score(self, score):
+        if self.state in ('running', 'free'):
+            self.score += score
+            self.prev_score = score
+        
+
+    def update(self, deltat):
+        if self.state == 'running':
+            self.time -= deltat
+            if self.time < 0:
+                self.state = 'scoreboard'
+                self.time = self.scoreboard_time
+
+        elif self.state == 'scoreboard':
+            self.time -= deltat
+            if self.time < 0:
+                self.state = 'waiting'
+                self.time = 0 
+
+    def get_status_text(self):
+        if self.state == 'free':
+            status_text = "%.1f" % (self.prev_score)
+        elif self.state == 'scoreboard':
+            status_text = "Score: %i" %(int(self.score))
+        else:
+            status_text = "%3d %2d %3d" %(
+                    int(self.score), 
+                    int(self.prev_score),
+                    int(self.time / 1000))
+        return status_text
+
+
+
 
 class ShootingGallery():
 
@@ -84,6 +137,7 @@ class ShootingGallery():
         #     self.target = Target([300, 300], 200, 10)
         # else:
         #     self.target = target
+        self.game = GameModel()
         self.status_text = ""
         self.targets = targets
         # self.default_mode = 'paper'
@@ -92,7 +146,9 @@ class ShootingGallery():
         self.mode = 0
         self.debugmode = 'N'
 
-    def __show_keypoints(self, keypoints, screen):
+    def __process_keypoints(self, keypoints, screen):
+
+            # if len(keypoints) > 0:
         for i, keypoint in enumerate(keypoints):
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
@@ -104,11 +160,15 @@ class ShootingGallery():
             #            -1)
 
             if i == 0:
+                print 'booom'
+                play_sound('shootinggallery/sound/Gun_Shot-Marvin-1140816320.wav')
+                self.game.start()
                 sc = 0.0
                 for tg in self.targets:
                     sc += tg.get_score([cx, cy])
-                self.status_text = "%.2f" % (sc)
-                print self.status_text
+                self.game.add_score(sc)
+                # self.status_text = "%.2f" % (sc)
+                # print self.status_text
         return screen
 
     def __camera_image_processing(self, frame):
@@ -180,7 +240,9 @@ class ShootingGallery():
                 # self.screen.blit(makesurf(frame), (0, 0))
                 self.targets.update(deltat)
                 self.targets.draw(self.screen)
-                self.__show_keypoints(keypoints, self.screen)
+                self.__process_keypoints(keypoints, self.screen)
+                self.game.update(deltat)
+                self.status_text = self.game.get_status_text()
                 self.print_status(self.screen)
 
             print self.debugmode
@@ -199,7 +261,9 @@ class ShootingGallery():
 
     def __prepare_scene(self, i):
         self.mode = i
-        scene_config = {'fontsize': 110}
+        scene_config = {
+                'fontsize': 110,
+                'free_game': False}
         scene_config.update(self.config['scenes'][i])
 
         self.background, self.background_offset = read_surf(scene_config['background'])
@@ -207,6 +271,7 @@ class ShootingGallery():
         self.fontsize = scene_config['fontsize']
         self.targets.empty()
         self.elapsed = 0
+        self.game = GameModel(free=scene_config['free_game'])
 
         # read_surf(
 
@@ -317,7 +382,7 @@ class ShootingGallery():
         else:
             # self.dot_detector.min_area_coeficient = 0.4
             # self.dot_detector.thr = self.calibration_surface.max_white
-            self.dot_detector.thr = self.calibration_surface.mean_white + 1.2 * (self.calibration_surface.var_white**0.5)
+            self.dot_detector.thr = self.calibration_surface.mean_white + 1.7 * (self.calibration_surface.var_white**0.5)
             self.dot_detector.min_area = 15
 
 

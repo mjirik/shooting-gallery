@@ -68,7 +68,7 @@ class RedDotDetector():
         import skimage.measure
         imlab = skimage.morphology.label(detector_image, background=0)
         props = skimage.measure.regionprops(imlab + 1)
-        print np.max(imlab), np.min(imlab), len(props)
+        # print np.max(imlab), np.min(imlab), len(props)
         keypoints = []
         for prop in props:
             if prop.area > self.min_area:

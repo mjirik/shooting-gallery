@@ -38,16 +38,28 @@ targets: {
     },
     'fox': {
         'impath': 'shootinggallery/imgs/fox.png',
-        'center':[640, 330],
-        'radius': 160,
+        'center':[290, 300],
+        'radius': 50,
         'speed': 60,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [-135, 5],
+        'vector': [-155, 5],
         'lifetime': 25.0,
-        'zoom': 0.2,
-        'start': [-1040, 650]
+        'zoom': 0.3,
+        'start': [1040, 650]
 
+    },
+    'picker': {
+        'impath': 'shootinggallery/imgs/mushroom_picker.png',
+        'center':[300, 320],
+        'radius': 250,
+        'speed': 60,
+        'heading': 'left',
+        'max_score': -50.0,
+        'vector': [35, 3],
+        'lifetime': 25.0,
+        'zoom': 0.3,
+        'start': [-40, 615]
     },
     'pig': {
         'impath': 'shootinggallery/imgs/pig.png',
@@ -146,6 +158,10 @@ scenes: {
             'mean_time': 7,
         },{
             'target_key': 'fox',
+            'start' : [30, 30],
+            'mean_time': 11,
+        },{
+            'target_key': 'picker',
             'start' : [30, 30],
             'mean_time': 11,
         },{

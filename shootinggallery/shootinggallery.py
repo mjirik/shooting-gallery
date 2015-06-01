@@ -245,7 +245,7 @@ class ShootingGallery():
                 self.status_text = self.game.get_status_text()
                 self.print_status(self.screen)
 
-            print self.debugmode
+            # print self.debugmode
             if self.debugmode == "D":
                 self.screen.blit(np2surf(frame), (0, 0))
             elif self.debugmode == "F":

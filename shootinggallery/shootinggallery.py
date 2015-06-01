@@ -330,7 +330,7 @@ class ShootingGallery():
                         
                     # self.__prepare_scene(5)
 
-    def calibration(self):
+    def calibration(self, interactive=True):
         # get transformation
 # show calibration image (for projector mode)
         self.__calib_show_function(self.calibration_surface.calibim)
@@ -359,7 +359,15 @@ class ShootingGallery():
         print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
         
         self.dot_detector = bd.RedDotDetector()
-        self.dot_detector.interactive_train(frame_with_dot, min_area_coeficient=0.4) #pts[0], pts[1])
+
+        if interactive:
+            self.dot_detector.interactive_train(frame_with_dot, min_area_coeficient=0.4) #pts[0], pts[1])
+        else:
+            # self.dot_detector.min_area_coeficient = 0.4
+            # self.dot_detector.thr = self.calibration_surface.max_white
+            self.dot_detector.thr = self.calibration_surface.mean_white + 2 * (self.calibration_surface.var_white**0.5)
+            self.dot_detector.min_area = 15
+
 
     def __calib_show_function(self, frame):
 
@@ -386,7 +394,7 @@ class ShootingGallery():
 
         pygame.display.flip()        
         self.clock.tick(5)                                  # omezení maximálního počtu snímků za sekundu
-        self.calibration()
+        self.calibration(interactive=False)
         self.__prepare_scene(self.mode)
 
 

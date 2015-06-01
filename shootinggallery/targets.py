@@ -31,7 +31,7 @@ class Target(pygame.sprite.Sprite):
         self.radius = int(radius * zoom)
         self.max_score = max_score
         # self.image = pygame.image.load(impath)
-        self.score_coeficient = float(max_score) / float(radius)
+        self.score_coeficient = float(max_score) / float(self.radius)
         self.start = np.asarray(start)
         self.vector = np.asarray(vector)
         self.lifetime = lifetime
@@ -56,6 +56,8 @@ class Target(pygame.sprite.Sprite):
             # self.position.astype(np.float)
             - np.asarray(impact_point))
         score = self.max_score - (dist * self.score_coeficient)
+        # score = self.max_score * (1.0 - dist/self.radius)
+
         return max(score, 0)
 
     def _draw(self, frame):

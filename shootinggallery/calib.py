@@ -23,7 +23,10 @@ import skimage.measure
 class Calibration():
     def __init__(self, target_file, show_function=None, transpose=False):
         """
+
         transpose can be used when working with pygame
+
+        usefull methods: find_surface() and warp()
         """
         self.target_file = target_file
         self.calibim = cv2.imread(self.target_file)          # queryImage
@@ -53,8 +56,18 @@ class Calibration():
         # props_w = skimage.measure.regionprops(imt_white, frame)
         self.mean_black = np.mean(frame[imt_black], axis=0)
         self.mean_white = np.mean(frame[imt_white], axis=0)
+        self.var_black = np.var(frame[imt_black], axis=0)
+        self.var_white = np.var(frame[imt_white], axis=0)
+        self.max_white  = frame[imt_white][np.argmax(np.mean(frame[imt_white], axis=1))]
+        self.min_white  = frame[imt_white][np.argmin(np.mean(frame[imt_white], axis=1))]
+        self.max_black = frame[imt_black][np.argmax(np.mean(frame[imt_black], axis=1))]
+        self.min_black = frame[imt_black][np.argmin(np.mean(frame[imt_black], axis=1))]
 
     def find_surface(self, frame=None):
+        """
+        Find surface
+        self.Minv transformation parameters
+        """
         Minv = None
         if frame is None:
             frame = self.get_frame()
@@ -126,12 +139,19 @@ class Calibration():
         if Minv is None:
             dst = frame
         else:
-            dst = cv2.warpPerspective(frame, Minv, img1.shape)
+            dst = cv2.warpPerspective(frame, Minv, img1.shape[::-1])
             self.black_and_white_prototype(dst)
         # plt.imshow(dst, 'gray')  # , plt.show()
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         return dst
+
+    def warp(self, frame):
+        """
+        Use trasfomration 
+        """
+        outframe = cv2.warpPerspective(frame, self.Minv, img1.shape[::-1])
+        return outframe
 
     def draw_matches(self):
         img3 = drawMatches(self.img1, self.kp1, 

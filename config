@@ -18,13 +18,13 @@ resolution: [1024, 768]
 targets: {
     'paper_target': {
         'impath': "480pxTarget.png",
-        'center': [320, 240],
-        'radius': 240,
+        'center': [512, 384],
+        'radius': 384,
         'heading': None,
         'speed': 15,
         'max_score': 10.0,
         'vector': [0, 0],
-        'start': [320, 240],
+        'start': [515, 384],
     },
     'paper_target_alpha': {
         'impath': None,
@@ -92,7 +92,7 @@ scenes: {
         'background': {
             'impath': './shootinggallery/imgs/02.jpg',
             'offset': [0, 0],
-            'zoom' : 0.25
+            'zoom' : 0.4
             },
         'foreground': None,
         # 'impath': './FaceInHole/imgs/02.jpg',

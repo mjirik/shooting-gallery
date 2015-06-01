@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,13 +7,24 @@ import skimage
 
 
 class RedDotDetector():
+    """
+    Lze nastavit interaktivně, nebo jen ručně nastavit práh, 
+    případně min_area_coeficient
+    """
+
     def __init__(self):
         self.detection_mode = 'continuous'
         self.detection_mode = 'falling'
         self.detection_mode = 'rising'
         self.prev_keypoints = []
+        self.min_area_coeficient = 0.5
 
-    def interactive_train(self, frame, min_area_coeficient=0.5):
+    def interactive_train(self, frame, min_area_coeficient=None):
+        """
+        User click on blob and on the background and all is trained 
+        """
+        if min_area_coeficient is not None:
+            self.min_area_coeficient = min_area_coeficient
         plt.imshow(frame)
 
         pts = plt.ginput(2)
@@ -22,32 +35,21 @@ class RedDotDetector():
 
         self.thr = (self.color_prototype_dot.astype(np.int) +  
                 self.color_prototype_background.astype(np.int)) / 2
+        self.train_min_area(frame, pts)
 
+
+    def train_min_area(self, frame, pts=None):
+        """
+        estimate minimal area
+
+        """
         detector_image = (frame > self.thr).all(axis=2).astype(np.uint8)
         imlabel = skimage.morphology.label(detector_image)
+
         lab = imlabel[pts[0][::-1]]
         sm = np.sum(imlabel==lab)
 
-
-
-        self.min_area = int(min_area_coeficient * sm)
-        # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
-
-#         params = cv2.SimpleBlobDetector_Params()
-#         # Change thresholds
-#         params.minThreshold = int(np.mean(self.color_prototype_background))
-#         params.maxThreshold = int(np.mean(self.color_prototype_dot))
-#
-#         # Filter by Area.
-#         params.filterByArea = True
-#         params.minArea = 1500
-#         params.minArea = 550000
-# # Create a detector with the parameters
-#         ver = (cv2.__version__).split('.')
-#         if int(ver[0]) < 3 :
-#             self.blob_detector = cv2.SimpleBlobDetector(params)
-#         else :
-#             self.blob_detector = cv2.SimpleBlobDetector_create(params)
+        self.min_area = int(self.min_area_coeficient * sm)
 
     def detect(self, frame, return_debug_image=False):
 

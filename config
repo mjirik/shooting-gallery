@@ -36,6 +36,19 @@ targets: {
         'vector': [0, 0],
         'start': [320, 240],
     },
+    'fox': {
+        'impath': 'shootinggallery/imgs/fox.png',
+        'center':[640, 330],
+        'radius': 160,
+        'speed': 60,
+        'heading': 'left',
+        'max_score': 10.0,
+        'vector': [-135, 5],
+        'lifetime': 25.0,
+        'zoom': 0.2,
+        'start': [-1040, 650]
+
+    },
     'pig': {
         'impath': 'shootinggallery/imgs/pig.png',
         'center':[640, 330],
@@ -94,6 +107,7 @@ scenes: {
         'offset': [0, 0],
         'zoom': 1.0,
         'fontsize': 512,
+        'free_game': true,
         'targets':[{
             'target_key': 'paper_target',
             'start' : [10, 10],
@@ -101,6 +115,18 @@ scenes: {
         }]
     },
     1:{
+        'background': None,
+        'foreground': None,
+        'offset': [0, 0],
+        'zoom': 1.0,
+        'fontsize': 110,
+        'targets':[{
+            'target_key': 'paper_target',
+            'start' : [10, 10],
+            'mean_time': None,
+        }]
+    },
+    2:{
         'background': {
             'impath': './shootinggallery/imgs/02.jpg',
             'offset': [0, 0],
@@ -117,20 +143,24 @@ scenes: {
         },{
             'target_key': 'pig2',
             'start' : [30, 30],
+            'mean_time': 7,
+        },{
+            'target_key': 'fox',
+            'start' : [30, 30],
             'mean_time': 11,
         },{
             'target_key': 'deer',
             'start' : [30, 30],
-            'mean_time': 19,
+            'mean_time': 15,
         },{
             'target_key': 'deer2',
             'start' : [30, 30],
-            'mean_time': 21,
+            'mean_time': 11,
         }
 
         ]
     },
-    2:{
+    3:{
         'background': 'frame',
         'foreground': None,
         'offset': [0, 0],

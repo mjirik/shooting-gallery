@@ -24,69 +24,18 @@ import blob_detection as bd
 import calib
 import expocomp
 from targets import Target, Targets
+from cameraio import FrameGetter, np2surf
 
+sound_library = {}
 
-def np2surf(pixels, transpose=True):
-    if transpose:
-        # pixels = cv2.transpose(pixels)
-        if len(pixels.shape) == 3:
-            pixels = np.transpose(pixels, axes=[1, 0, 2])
-        else:
-            pixels = np.transpose(pixels, axes=[1, 0])
-    try:
-        surf = pygame.surfarray.make_surface(pixels)
-    except IndexError:
-        if len(pixels.shape) == 2:
-            sh = pixels.shape
-            px = np.zeros([sh[0], sh[1], 3], dtype=pixels.dtype)
-
-            px[:, :, 0] = pixels[:, :]
-            px[:, :, 1] = pixels[:, :]
-            px[:, :, 2] = pixels[:, :]
-            pixels = px
-        (width, height, colours) = pixels.shape
-        surf = pygame.display.set_mode((width, height))
-        pygame.surfarray.blit_array(surf, pixels)
-    return surf
-
-
-
-
-
-class FrameGetter():
-    """
-    Can be used for reading image or video from file or url
-    """
-    def __init__(self, video_source=0, rot90=False, color='RGB'):
-        self.rot90 = rot90
-        self.color = color
-        self.video_source = video_source
-
-        try:
-            file = cStringIO.StringIO(urllib.urlopen(video_source).read())
-            img = scipy.misc.imread(file)
-            self.useopencv = False
-        except:
-            self.useopencv = True 
-
-        if self.useopencv:
-            self.cap = cv2.VideoCapture(self.video_source)
-
-    def read(self):
-        if self.useopencv:
-            res, frame = self.cap.read()
-            if self.color is "RGB":
-                frame = frame[:,:, ::-1]
-            if self.rot90:
-                frame = cv2.transpose(frame)
-        else:
-            file = cStringIO.StringIO(urllib.urlopen(video_source).read())
-            frame = scipy.misc.imread(file)
-            res = True
-            if self.rot90:
-                frame = np.rot90(frame)
-
-        return res, frame
+def play_sound(path):
+  global _sound_library
+  sound = _sound_library.get(path)
+  if sound == None:
+    canonicalized_path = path.replace('/', os.sep).replace('\\', os.sep)
+    sound = pygame.mixer.Sound(canonicalized_path)
+    _sound_library[path] = sound
+  sound.play()
 
 def read_surf(info):
 
@@ -249,10 +198,12 @@ class ShootingGallery():
 
     def __prepare_scene(self, i):
         self.mode = i
-        scene_config = self.config['scenes'][i]
+        scene_config = {'fontsize': 80}
+        scene_config.update(self.config['scenes'][i])
 
         self.background, self.background_offset = read_surf(scene_config['background'])
         self.foreground, self.foreground_offset = read_surf(scene_config['foreground'])
+        self.fontsize = scene_config['fontsize']
         self.targets.empty()
         self.elapsed = 0
 

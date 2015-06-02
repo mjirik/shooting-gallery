@@ -91,49 +91,13 @@ class Target(pygame.sprite.Sprite):
 class TargetGenerator():
     def __init__(self, target_generator_config): 
         selg.tgg_config = target_generator_config
-        self.time = 0.5
+        self.time = 0.0
         self.target_list = None
 
     def update(self, deltat):
         self.time -= deltat
         if self.time < 0:
             self.time = 10.0
-
-            
-
-
-        
-
-
-class Targets():
-    def __init__(self):
-        self.targets = []
-
-    def add_from_config(self, config):
-        for tg in config:
-            target = Target(**tg)
-            self.add(target)
-
-    def add(self, target):
-        self.targets.append(target)
-
-    def tick(self):
-        for tg in self.targets:
-            tg.tick()
-            if tg.delete:
-                self.targets.remove(tg)
-        pass
-
-    def draw(self, frame):
-        for tg in self.targets:
-            tg.draw(frame)
-
-    def get_score(self, pt):
-        sc = 0.0
-        for tg in self.targets:
-            sc += tg.get_score(pt)
-
-        return sc
 
 def main():
     logger = logging.getLogger()

@@ -38,8 +38,8 @@ targets: {
     },
     'fox': {
         'impath': 'shootinggallery/imgs/fox.png',
-        'center':[290, 300],
-        'radius': 50,
+        'center':[250, 280],
+        'radius': 40,
         'speed': 60,
         'heading': 'left',
         'max_score': 10.0,
@@ -51,14 +51,14 @@ targets: {
     },
     'picker': {
         'impath': 'shootinggallery/imgs/mushroom_picker.png',
-        'center':[300, 320],
-        'radius': 250,
+        'center':[250, 320],
+        'radius': 210,
         'speed': 60,
         'heading': 'left',
         'max_score': -50.0,
         'vector': [35, 3],
-        'lifetime': 25.0,
-        'zoom': 0.3,
+        'lifetime': 35.0,
+        'zoom': 0.4,
         'start': [-40, 615]
     },
     'pig': {
@@ -74,23 +74,10 @@ targets: {
         'start': [-20, 650]
 
     },
-    'pig2': {
-        'impath': 'shootinggallery/imgs/pig.png',
-        'center':[640, 330],
-        'radius': 160,
-        'speed': 30,
-        'heading': 'left',
-        'max_score': 10.0,
-        'vector': [40, -3],
-        'lifetime': 25.0,
-        'zoom': 0.1,
-        'start': [-20, 670]
-
-    },
     'deer':{
         'impath': 'shootinggallery/imgs/deer.png',
-        'center':[600, 470],
-        'radius': 80,
+        'center':[600, 465],
+        'radius': 75,
         'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
@@ -99,18 +86,6 @@ targets: {
         'zoom': 0.3,
         'start': [-20, 680]
     },
-    'deer2':{
-        'impath': 'shootinggallery/imgs/deer.png',
-        'center':[600, 470],
-        'radius': 80,
-        'speed': 30,
-        'heading': 'left',
-        'max_score': 10.0,
-        'vector': [195, 1],
-        'lifetime': 20.0,
-        'zoom': 0.3,
-        'start': [-20, 650]
-    }
 }
 scenes: {
     0:{
@@ -145,46 +120,34 @@ scenes: {
             'zoom' : 0.4
             },
         'foreground': None,
-        # 'impath': './FaceInHole/imgs/02.jpg',
-        # 'offset': [0, 0],
-        # 'zoom': 0.2,
         'targets':[{
             'target_key': 'pig',
-            'start' : [10, 10],
-            'mean_time': 8,
-        },{
-            'target_key': 'pig2',
-            'start' : [30, 30],
             'mean_time': 7,
         },{
+            'target_key': 'pig',
+            'config':{
+                'zoom': 0.3,
+                'start' : [-30, 590],
+                'vector': [25, -6]
+            },
+            'mean_time': 6,
+        },{
             'target_key': 'fox',
-            'start' : [30, 30],
             'mean_time': 11,
         },{
             'target_key': 'picker',
-            'start' : [30, 30],
-            'mean_time': 11,
+            'mean_time': 9,
         },{
             'target_key': 'deer',
-            'start' : [30, 30],
-            'mean_time': 15,
+            'mean_time': 12,
         },{
-            'target_key': 'deer2',
-            'start' : [30, 30],
+            'target_key': 'deer',
             'mean_time': 11,
-        }
-
-        ]
-    },
-    3:{
-        'background': 'frame',
-        'foreground': None,
-        'offset': [0, 0],
-        'zoom': 1.0,
-        'targets':[{
-            'target_key': 'paper_target_alpha',
-            'start' : [10, 10],
-            'mean_time': None,
+            'config':{
+                'zoom': 0.3,
+                'start' : [-40, 610],
+                'vector': [65, -3]
+            },
         }]
     },
 }

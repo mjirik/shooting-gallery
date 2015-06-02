@@ -24,7 +24,7 @@ import os
 import blob_detection as bd
 import calib
 import expocomp
-from targets import Target, Targets
+from targets import Target 
 from cameraio import FrameGetter, np2surf
 
 _sound_library = {}
@@ -112,31 +112,29 @@ class ShootingGallery():
         hledána USB kamera, je-li vložena url, předpokládá se kamera s výstupem
         do jpg.
 
+
+        Konfigurace cile je dana v kofiguračním souboru v poli targets.
+        Tyto hodnoty pak mohou být řízeny ještě v každé jednotlivé scéně. 
+        pomocí scenes - targets - id - config
+
         """
         self.config = config
-        target = Target(
-            config['target_center'],
-            config['target_radius'],
-            10,
-            config['target_file']
-        )
-        target = Target(**config['targets']['paper_target'])
+        # target = Target(
+        #     config['target_center'],
+        #     config['target_radius'],
+        #     10,
+        #     config['target_file']
+        # )
+        # target = Target(**config['targets']['paper_target'])
         # targets = Targets()
         targets = pygame.sprite.Group()
-        targets.add(target)
+        # targets.add(target)
         self.calibration_surface = calib.Calibration(config['target_file'])
         video_source = config['video_source']
 # create video capture
-        # video_source = 0
-        # video_source = "http://192.168.1.60/snapshot.jpg"
-        # self.cap = cv2.VideoCapture(video_source)
         # self.cap = FrameGetter(video_source, resolution=[800, 600])
         self.cap = FrameGetter(video_source, resolution=[640, 480])
         self.elapsed = 0
-        # if target is None:
-        #     self.target = Target([300, 300], 200, 10)
-        # else:
-        #     self.target = target
         self.game = GameModel()
         self.status_text = ""
         self.targets = targets
@@ -199,10 +197,13 @@ class ShootingGallery():
         if surf is not None:
             self.screen.blit(surf, pos)
 
+    def __generate_target(self):
+        pass
 
     def tick(self):
         """
         Tato funkce se vykonává opakovaně
+
         """
         # read the frames
         ret, frame = self.cap.read()
@@ -212,10 +213,6 @@ class ShootingGallery():
             wframe, cframe = self.__camera_image_processing(frame)
             self.event_processing()
 
-
-            # keypoints = bd.red_dot_detection(frame)
-            # keypoints = bd.diff_dot_detection(frame, self.init_frame)
-            # keypoints, frame = self.dot_detector.detect(frame, True)
             keypoints, det_img, lab_img = self.dot_detector.detect(
                     wframe,
                     return_debug_image=True
@@ -226,10 +223,14 @@ class ShootingGallery():
                     self.elapsed -= deltat
                     if self.elapsed < 0:
                         scene_config = self.config['scenes'][self.mode]
+                        # which target is used
                         rng = random.randint(0,len(scene_config['targets'])-1)
+
                         new_tg_key = scene_config['targets'][rng]['target_key']
                         new_tg_gen_config = scene_config['targets'][rng]
                         tg_config = self.config['targets'][new_tg_key]
+                        if "config" in  scene_config['targets'][rng].keys():
+                            tg_config.update(scene_config['targets'][rng]['config'])
                         if new_tg_gen_config['mean_time'] == 'None':
                             self.elapsed = None
                         else:

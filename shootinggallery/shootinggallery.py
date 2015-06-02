@@ -197,8 +197,25 @@ class ShootingGallery():
         if surf is not None:
             self.screen.blit(surf, pos)
 
-    def __generate_target(self):
-        pass
+    def __generate_target(self, deltat):
+        if self.elapsed is not None:
+            self.elapsed -= deltat
+            if self.elapsed < 0:
+                scene_config = self.config['scenes'][self.mode]
+                # which target is used
+                rng = random.randint(0,len(scene_config['targets'])-1)
+
+                new_tg_key = scene_config['targets'][rng]['target_key']
+                new_tg_gen_config = scene_config['targets'][rng]
+                tg_config = self.config['targets'][new_tg_key]
+                if "config" in  scene_config['targets'][rng].keys():
+                    tg_config.update(scene_config['targets'][rng]['config'])
+                if new_tg_gen_config['mean_time'] == 'None':
+                    self.elapsed = None
+                else:
+                    self.elapsed = (0.5 + random.random()) * 1000 * new_tg_gen_config['mean_time']
+                
+                self.targets.add(Target(**tg_config))
 
     def tick(self):
         """
@@ -219,24 +236,7 @@ class ShootingGallery():
                     )
 
             if self.debugmode == "N":
-                if self.elapsed is not None:
-                    self.elapsed -= deltat
-                    if self.elapsed < 0:
-                        scene_config = self.config['scenes'][self.mode]
-                        # which target is used
-                        rng = random.randint(0,len(scene_config['targets'])-1)
-
-                        new_tg_key = scene_config['targets'][rng]['target_key']
-                        new_tg_gen_config = scene_config['targets'][rng]
-                        tg_config = self.config['targets'][new_tg_key]
-                        if "config" in  scene_config['targets'][rng].keys():
-                            tg_config.update(scene_config['targets'][rng]['config'])
-                        if new_tg_gen_config['mean_time'] == 'None':
-                            self.elapsed = None
-                        else:
-                            self.elapsed = (0.5 + random.random()) * 1000 * new_tg_gen_config['mean_time']
-                        
-                        self.targets.add(Target(**tg_config))
+                self.__generate_target(deltat)
                 self.__blit_surf_or_frame(self.background, wframe)
                 # self.screen.blit(makesurf(frame), (0, 0))
                 self.targets.update(deltat)

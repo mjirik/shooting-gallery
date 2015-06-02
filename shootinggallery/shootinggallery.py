@@ -129,18 +129,18 @@ class ShootingGallery():
         # targets = Targets()
         targets = pygame.sprite.Group()
         # targets.add(target)
-        self.calibration_surface = calib.Calibration(config['target_file'])
+        self.calibration_surface = calib.Calibration(config['calibration_image'])
         video_source = config['video_source']
 # create video capture
         # self.cap = FrameGetter(video_source, resolution=[800, 600])
-        self.cap = FrameGetter(video_source, resolution=[640, 480])
+        self.cap = FrameGetter(
+                video_source, 
+                resolution=config['video_source_resolution'])
         self.elapsed = 0
         self.game = GameModel()
         self.status_text = ""
         self.targets = targets
         # self.default_mode = 'paper'
-        self.mode = 'projector' 
-        self.mode = 'paper' 
         self.mode = 0
         self.debugmode = 'N'
 
@@ -383,9 +383,11 @@ class ShootingGallery():
         else:
             # self.dot_detector.min_area_coeficient = 0.4
             # self.dot_detector.thr = self.calibration_surface.max_white
-            self.dot_detector.thr = self.calibration_surface.mean_white + 1.7 * (self.calibration_surface.var_white**0.5)
-            self.dot_detector.min_area = 15
-
+            self.dot_detector.thr = self.calibration_surface.mean_white + \
+                    self.config['auto_target_calibration_white_var_alpha'] *\
+                    (self.calibration_surface.var_white**0.5)
+            self.dot_detector.min_area = \
+                    self.config['auto_target_calibration_min_area']
 
     def __calib_show_function(self, frame):
 

@@ -7,14 +7,16 @@
 # video_source = "http://192.168.1.60/snapshot.jpg"
 
 # target_file: "480pxTarget.bmp"
-target_file: "480pxTarget.png"
-target_center: [320,240]
-target_radius: 240
-max_score: 10
-option: "haf"
+calibration_image: "480pxTarget.png"
+# target_center: [320,240]
+# target_radius: 240
+# max_score: 10
 # video_source: "http://192.168.1.60/snapshot.jpg"
 video_source: 1
 resolution: [1024, 768]
+video_source_resolution: [640, 480]
+auto_target_calibration_white_var_alpha: 1.7
+auto_target_calibration_min_area: 15
 targets: {
     'paper_target': {
         'impath': "480pxTarget.png",
@@ -126,9 +128,9 @@ scenes: {
         },{
             'target_key': 'pig',
             'config':{
-                'zoom': 0.3,
-                'start' : [-30, 590],
-                'vector': [25, -6]
+                'zoom': 0.15,
+                'start' : [-30, 610],
+                'vector': [25, -4]
             },
             'mean_time': 6,
         },{

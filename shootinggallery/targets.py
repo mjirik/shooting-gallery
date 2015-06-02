@@ -55,10 +55,11 @@ class Target(pygame.sprite.Sprite):
                 np.array([self.rect.left, self.rect.top]) + self.center
             # self.position.astype(np.float)
             - np.asarray(impact_point))
-        score = self.max_score - (dist * self.score_coeficient)
-        # score = self.max_score * (1.0 - dist/self.radius)
+        # score = self.max_score - (dist * self.score_coeficient)
+        score = (1.0 - dist/self.radius)
+        score = self.max_score * max(score, 0)
 
-        return max(score, 0)
+        return score
 
     def _draw(self, frame):
         cv2.circle(frame,

@@ -146,7 +146,9 @@ class ShootingGallery():
 
     def __process_keypoints(self, keypoints, screen):
 
-            # if len(keypoints) > 0:
+        print keypoints
+        # if len(keypoints) > 0:
+        #     pass
         for i, keypoint in enumerate(keypoints):
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
@@ -264,7 +266,8 @@ class ShootingGallery():
         self.mode = i
         scene_config = {
                 'fontsize': 110,
-                'free_game': False}
+                'free_game': False,
+                'game_time': 60}
         scene_config.update(self.config['scenes'][i])
 
         self.background, self.background_offset = read_surf(scene_config['background'])
@@ -272,7 +275,8 @@ class ShootingGallery():
         self.fontsize = scene_config['fontsize']
         self.targets.empty()
         self.elapsed = 0
-        self.game = GameModel(free=scene_config['free_game'])
+        self.game = GameModel(free=scene_config['free_game'], 
+                              game_time=scene_config['game_time'])
 
         # read_surf(
 

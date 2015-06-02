@@ -7,7 +7,7 @@
 # video_source = "http://192.168.1.60/snapshot.jpg"
 
 # target_file: "480pxTarget.bmp"
-calibration_image: "480pxTarget.png"
+calibration_image: "shootinggallery/imgs/480pxTarget.png"
 # target_center: [320,240]
 # target_radius: 240
 # max_score: 10
@@ -19,7 +19,7 @@ auto_target_calibration_white_var_alpha: 1.7
 auto_target_calibration_min_area: 15
 targets: {
     'paper_target': {
-        'impath': "480pxTarget.png",
+        'impath': "shootinggallery/imgs/480pxTarget.png",
         'center': [512, 384],
         'radius': 384,
         'heading': None,
@@ -95,7 +95,7 @@ scenes: {
         'foreground': None,
         'offset': [0, 0],
         'zoom': 1.0,
-        'fontsize': 512,
+        'fontsize': 768,
         'free_game': true,
         'targets':[{
             'target_key': 'paper_target',

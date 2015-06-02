@@ -472,7 +472,7 @@ def get_params(argv=None):
     )
     conf_parser.add_argument("-c", "--conf_file",
                              help="Specify config file", metavar="FILE",
-                             default='config')
+                             default='config.yml')
     args = conf_parser.parse_args()
 
     # if args.conf_file:

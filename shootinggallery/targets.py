@@ -17,6 +17,12 @@ import numpy as np
 import pygame
 import cv2
 
+def inverted(img):
+    inv = pygame.Surface(img.get_rect().size, pygame.SRCALPHA)
+    inv.fill((255,255,255,255))
+    inv.blit(img, (0,0), None, pygame.BLEND_RGB_SUB)
+    return inv
+
 class Target(pygame.sprite.Sprite):
     """
     self.position is the same as self.rect.center
@@ -25,7 +31,8 @@ class Target(pygame.sprite.Sprite):
     """
 
     def __init__(self, center, radius, max_score, impath, start=[0 , 0],
-            vector=[1, 1], speed=1.0, heading=None, lifetime=None, zoom=1.0):
+            vector=[1, 1], speed=1.0, heading=None, lifetime=None, zoom=1.0, 
+            invert_intensity=False):
         pygame.sprite.Sprite.__init__(self)
         self.center = (np.asarray(center) * zoom).astype(np.int)
         self.radius = int(radius * zoom)
@@ -40,6 +47,8 @@ class Target(pygame.sprite.Sprite):
         else:
             self.src_image=pygame.image.load(impath)
         self.image = pygame.transform.rotozoom(self.src_image, 0, zoom)
+        if invert_intensity:
+            self.image = inverted(self.image)
         # pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
         self.rect = self.image.get_rect()
         self.position = 1.0 * np.asarray(start)

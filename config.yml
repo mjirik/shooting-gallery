@@ -121,7 +121,9 @@ scenes: {
         'background': {
             'impath': './shootinggallery/imgs/02.jpg',
             'offset': [0, 0],
-            'zoom' : 0.4
+            'zoom' : 0.4, 
+            'invert_intensity': True
+
             },
         'foreground': None,
         'game_time': 40,
@@ -153,6 +155,19 @@ scenes: {
                 'start' : [-40, 610],
                 'vector': [65, -3]
             },
+        }]
+    },
+    3:{
+        'background': None,
+        'foreground': None,
+        'offset': [0, 0],
+        'zoom': 1.0,
+        'fontsize': 768,
+        'free_game': true,
+        'game_time': None,
+        'targets':[{
+            'target_key': 'paper_target',
+            'mean_time': None,
         }]
     },
 }

@@ -24,6 +24,7 @@ import os
 import blob_detection as bd
 import calib
 import expocomp
+import targets
 from targets import Target 
 from cameraio import FrameGetter, np2surf
 
@@ -38,16 +39,22 @@ def play_sound(path):
     _sound_library[path] = sound
   sound.play()
 
-def read_surf(info):
+def read_surf(infoin):
 
-    if info is None or info == 'None':
+    if infoin is None or infoin == 'None':
         return None, None
+
+    info = {'invert_intensity' : False , 'offset': [0, 0]}
+    info.update(infoin)
     
     surface = pygame.image.load(info['impath'])
     # if self.config['flip']:
     #     surface = pygame.transform.flip(surface, True, False)
     # pygame.transform.scale(surface)
     surface = pygame.transform.rotozoom(surface, 0, info['zoom'])
+    if info['invert_intensity']:
+        print 'invert'
+        surface = targets.inverted(surface)
     return surface, info['offset']
 
 class GameModel():

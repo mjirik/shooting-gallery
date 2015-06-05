@@ -230,15 +230,18 @@ class ShootingGallery():
                 # which target is used
                 rng = random.randint(0,len(scene_config['targets'])-1)
 
+            
                 new_tg_key = scene_config['targets'][rng]['target_key']
-                new_tg_gen_config = scene_config['targets'][rng]
+                new_tg_gen_config = {'mean_time': 10, 'time_var':4}
+                new_tg_gen_config.update(scene_config['targets'][rng])
                 tg_config = self.config['targets'][new_tg_key]
                 if "config" in  scene_config['targets'][rng].keys():
                     tg_config.update(scene_config['targets'][rng]['config'])
                 if new_tg_gen_config['mean_time'] == 'None':
                     self.elapsed = None
                 else:
-                    self.elapsed = (0.5 + random.random()) * 1000 * new_tg_gen_config['mean_time']
+                    # self.elapsed = (0.5 + random.random()) * 1000 * new_tg_gen_config['mean_time']
+                    self.elapsed = np.random.normal(new_tg_gen_config['mean_time'], new_tg_gen_config['time_var']) * 1000
                 
                 self.targets.add(Target(**tg_config))
 

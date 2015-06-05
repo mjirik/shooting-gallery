@@ -23,7 +23,6 @@ targets: {
         'center': [512, 384],
         'radius': 384,
         'heading': None,
-        'speed': 15,
         'max_score': 10.0,
         'vector': [0, 0],
         'start': [515, 384],
@@ -33,7 +32,6 @@ targets: {
         'center': [320, 240],
         'radius': 240,
         'heading': None,
-        'speed': 15,
         'max_score': 10.0,
         'vector': [0, 0],
         'start': [320, 240],
@@ -44,12 +42,12 @@ targets: {
         'radius': 40,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [-155, 2],
-        'vector_var': [30, 2],
         'lifetime': 25.0,
         'zoom': 0.3,
-        'start': [1060, 650],
+        'vector': [-155, 2],
+        'vector_var': [30, 2],
         'start_var': [1, 5],
+        'start': [1060, 650],
 
 
     },
@@ -57,10 +55,11 @@ targets: {
         'impath': 'shootinggallery/imgs/mushroom_picker.png',
         'center':[250, 320],
         'radius': 210,
-        'speed': 60,
         'heading': 'left',
         'max_score': -50.0,
         'vector': [35, 3],
+        'vector_var': [4, 2],
+        'start_var': [1, 4],
         'lifetime': 35.0,
         'zoom': 0.4,
         'start': [-40, 615]
@@ -69,23 +68,25 @@ targets: {
         'impath': 'shootinggallery/imgs/pig.png',
         'center':[640, 330],
         'radius': 160,
-        'speed': 60,
         'heading': 'left',
         'max_score': 10.0,
-        'vector': [65, 5],
-        'lifetime': 25.0,
+        'vector': [65, -1],
+        'vector_var': [5, 2],
+        'start_var': [1, 4],
+        'lifetime': 45.0,
         'zoom': 0.2,
-        'start': [-20, 650]
+        'start': [-20, 660]
 
     },
     'deer':{
         'impath': 'shootinggallery/imgs/deer.png',
         'center':[600, 465],
         'radius': 75,
-        'speed': 30,
         'heading': 'left',
         'max_score': 10.0,
         'vector': [55, -3],
+        'vector_var': [7, 2],
+        'start_var': [1, 4],
         'lifetime': 20.0,
         'zoom': 0.3,
         'start': [-20, 680]
@@ -124,8 +125,8 @@ scenes: {
             'impath': './shootinggallery/imgs/02.jpg',
             'offset': [0, 0],
             'zoom' : 0.4, 
-            'invert_intensity': True,
-            'intensity_multiplier': 0.5,
+            # 'invert_intensity': True,
+            # 'intensity_multiplier': 0.5,
 
 
             },
@@ -162,16 +163,45 @@ scenes: {
         }]
     },
     3:{
-        'background': None,
+        'background': {
+            'impath': './shootinggallery/imgs/02_black.jpg',
+            'offset': [0, 0],
+            'zoom' : 0.4, 
+            # 'invert_intensity': True,
+            # 'intensity_multiplier': 0.5,
+
+
+            },
         'foreground': None,
-        'offset': [0, 0],
-        'zoom': 1.0,
-        'fontsize': 768,
-        'free_game': true,
-        'game_time': None,
+        'game_time': 40,
         'targets':[{
-            'target_key': 'paper_target',
-            'mean_time': None,
+            'target_key': 'pig',
+            'mean_time': 7,
+        },{
+            'target_key': 'pig',
+            'config':{
+                'zoom': 0.15,
+                'start' : [-30, 610],
+                'vector': [25, -4]
+            },
+            'mean_time': 6,
+        },{
+            'target_key': 'fox',
+            'mean_time': 11,
+        },{
+            'target_key': 'picker',
+            'mean_time': 9,
+        },{
+            'target_key': 'deer',
+            'mean_time': 12,
+        },{
+            'target_key': 'deer',
+            'mean_time': 11,
+            'config':{
+                'zoom': 0.3,
+                'start' : [-40, 610],
+                'vector': [65, -3]
+            },
         }]
     },
 }

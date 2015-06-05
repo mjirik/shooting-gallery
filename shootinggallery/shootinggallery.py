@@ -38,7 +38,6 @@ def normrnd(val ,scale):
     scale[zrs] = 1
     rnd = np.random.normal(val, scale)
     rnd [zrs] = val[zrs]
-    print val, '  ', scale
     return rnd
 
 def play_sound(path):
@@ -170,7 +169,7 @@ class ShootingGallery():
 
     def __process_keypoints(self, keypoints, screen):
 
-        print keypoints
+        # print keypoints
         # if len(keypoints) > 0:
         #     pass
         for i, keypoint in enumerate(keypoints):

@@ -16,6 +16,7 @@ import argparse
 import numpy as np
 import pygame
 import cv2
+import shootinggallery as sh
 
 def inverted(img):
     inv = pygame.Surface(img.get_rect().size, pygame.SRCALPHA)
@@ -30,17 +31,17 @@ class Target(pygame.sprite.Sprite):
     between self.center and self.position
     """
 
-    def __init__(self, center, radius, max_score, impath, start=[0 , 0],
-            vector=[1, 1], speed=1.0, heading=None, lifetime=None, zoom=1.0, 
-            invert_intensity=False):
+    def __init__(self, center, radius, max_score, impath, start=[0 , 0], start_var = [0, 0],
+            vector=[1, 1], vector_var=[0, 0],  speed=1.0, heading=None, lifetime=None, zoom=1.0, 
+            invert_intensity=False, intensity_multiplier=None):
         pygame.sprite.Sprite.__init__(self)
         self.center = (np.asarray(center) * zoom).astype(np.int)
         self.radius = int(radius * zoom)
         self.max_score = max_score
         # self.image = pygame.image.load(impath)
         self.score_coeficient = float(max_score) / float(self.radius)
-        self.start = np.asarray(start)
-        self.vector = np.asarray(vector)
+        self.start = sh.normrnd(start, start_var)
+        self.vector = sh.normrnd(vector, vector_var)
         self.lifetime = lifetime
         if impath is "None":
             self.src_image = self.image = pygame.Surface([radius * 2, radius * 2])
@@ -49,6 +50,11 @@ class Target(pygame.sprite.Sprite):
         self.image = pygame.transform.rotozoom(self.src_image, 0, zoom)
         if invert_intensity:
             self.image = inverted(self.image)
+        if intensity_multiplier is not None:
+            print 'multi'
+            ndim = pygame.surfarray.pixels.pixels3d(self.image) 
+            for (x,y,z), value in np.ndenumerate(ndim):
+                ndim[x,y,z] = value * intensity_multiplier
         # pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
         self.rect = self.image.get_rect()
         self.position = 1.0 * np.asarray(start)

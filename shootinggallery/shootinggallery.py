@@ -30,6 +30,17 @@ from cameraio import FrameGetter, np2surf
 
 _sound_library = {}
 
+
+def normrnd(val ,scale):
+    val = np.asarray(val)
+    scale = np.asarray(scale)
+    zrs =  scale == 0
+    scale[zrs] = 1
+    rnd = np.random.normal(val, scale)
+    rnd [zrs] = val[zrs]
+    print val, '  ', scale
+    return rnd
+
 def play_sound(path):
   global _sound_library
   sound = _sound_library.get(path)
@@ -44,17 +55,23 @@ def read_surf(infoin):
     if infoin is None or infoin == 'None':
         return None, None
 
-    info = {'invert_intensity' : False , 'offset': [0, 0]}
+    info = {'invert_intensity' : False , 'offset': [0, 0], 'intensity_multiplier': None}
     info.update(infoin)
     
     surface = pygame.image.load(info['impath'])
     # if self.config['flip']:
     #     surface = pygame.transform.flip(surface, True, False)
     # pygame.transform.scale(surface)
+    intensity_multiplier = info['intensity_multiplier']
     surface = pygame.transform.rotozoom(surface, 0, info['zoom'])
     if info['invert_intensity']:
         print 'invert'
         surface = targets.inverted(surface)
+    if intensity_multiplier is not None:
+        print 'multi'
+        ndim = pygame.surfarray.pixels3d(surface) 
+        for (x,y,z), value in np.ndenumerate(ndim):
+            ndim[x,y,z] = value * intensity_multiplier
     return surface, info['offset']
 
 class GameModel():
@@ -363,6 +380,7 @@ class ShootingGallery():
         # get transformation
 # show calibration image (for projector mode)
         self.__calib_show_function(self.calibration_surface.calibim)
+        self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
         _, frame = self.cap.read()
         self.aec = expocomp.AutomaticExposureCompensation()
         
@@ -370,7 +388,6 @@ class ShootingGallery():
         self.aec.set_area(20, 20)
         self.init_frame = self.calibration_surface.find_surface(frame)
         # get image with red point
-        self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
         _, frame = self.cap.read()
 
         if self.calibration_surface.Minv is None:

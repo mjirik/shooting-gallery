@@ -33,7 +33,7 @@ class Target(pygame.sprite.Sprite):
 
     def __init__(self, center, radius, max_score, impath, start=[0 , 0], start_var = [0, 0],
             vector=[1, 1], vector_var=[0, 0],  speed=1.0, heading=None, lifetime=None, zoom=1.0, 
-            invert_intensity=False, intensity_multiplier=None):
+            invert_intensity=False, intensity_multiplier=None, circle_color=(0,150,50)):
         pygame.sprite.Sprite.__init__(self)
         self.center = (np.asarray(center) * zoom).astype(np.int)
         self.radius = int(radius * zoom)
@@ -61,7 +61,7 @@ class Target(pygame.sprite.Sprite):
         self.rect.center = self.position
         # import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
 
-        pygame.draw.circle(self.image, (255, 100,100), self.center, self.radius, 3)
+        pygame.draw.circle(self.image, circle_color, self.center, self.radius, 3)
         self.delete = False
 
     def get_score(self, impact_point):

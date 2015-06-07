@@ -18,6 +18,7 @@ class RedDotDetector():
         self.detection_mode = 'rising'
         self.prev_keypoints = []
         self.min_area_coeficient = 0.5
+        self.max_area_coeficient = 2.5
         self.gaussian_filter_sigma = 0.9
 
     def interactive_train(self, frame, min_area_coeficient=None):
@@ -26,7 +27,10 @@ class RedDotDetector():
         """
         if min_area_coeficient is not None:
             self.min_area_coeficient = min_area_coeficient
-        plt.imshow(frame)
+        if len(frame.shape) == 2:
+            plt.imshow(frame, cmap='gray')
+        else:
+            plt.imshow(frame)
 
         pts = plt.ginput(2)
 
@@ -44,13 +48,17 @@ class RedDotDetector():
         estimate minimal area
 
         """
-        detector_image = (frame > self.thr).all(axis=2).astype(np.uint8)
+        if len(frame.shape) == 3:
+            detector_image = (frame > self.thr).all(axis=2).astype(np.uint8)
+        else:
+            detector_image = (frame > self.thr).astype(np.uint8)
         imlabel = skimage.morphology.label(detector_image)
 
         lab = imlabel[pts[0][::-1]]
         sm = np.sum(imlabel==lab)
 
         self.min_area = int(self.min_area_coeficient * sm)
+        self.max_area = int(self.max_area_coeficient * sm)
 
     def detect(self, frame, return_debug_image=False):
         # from skimage.filter import gaussian_filter
@@ -59,7 +67,10 @@ class RedDotDetector():
             # frame = gaussian_filter(frame, self.gaussian_filter_sigma)
 
         thr = self.thr
-        detector_image = (frame > thr).all(axis=2).astype(np.uint8)
+        if len(frame.shape) == 3:
+            detector_image = (frame > thr).all(axis=2).astype(np.uint8)
+        else:
+            detector_image = frame > np.mean(thr).astype(np.uint8)
         # detector_image = np.average(detector_image, axis=2)
         # detector_image = np.mean(frame, axis=2).astype(np.uint8)
 

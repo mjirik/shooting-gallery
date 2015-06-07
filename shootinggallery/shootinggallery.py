@@ -6,6 +6,7 @@ Hra střelnice
 
 # import pygame
 import argparse
+import copy
 import ConfigParser
 import sys
 import json
@@ -30,6 +31,7 @@ from cameraio import FrameGetter, np2surf
 
 _sound_library = {}
 
+hud_color = (0, 150,00)
 
 def normrnd(val ,scale):
     val = np.asarray(val)
@@ -123,13 +125,22 @@ class GameModel():
         elif self.state == 'scoreboard':
             status_text = "Score: %i" %(int(self.score))
         else:
-            status_text = "%3d %2d %3d %2d" %(
-                    int(self.score), 
+            status_text = "%2d %3d %2d %3d" %(
                     int(self.prev_score),
-                    int(self.time / 1000),
+                    int(self.score), 
                     int(self.nshoots),
+                    int(self.time / 1000),
                     )
         return status_text
+
+def rgb_normalization(wframe):
+#normalized
+        sm = np.sum(wframe.astype(float), axis=2)
+
+        wframe[:,:, 0] = np.uint8(wframe[:, :, 0] * 70.0 / sm)
+
+        wframe[:,:, 1] = np.uint8(wframe[:, :, 1] * 70.0 / sm)
+        wframe[:,:, 2] = np.uint8(wframe[:, :, 2] * 70.0 / sm)
 
 
 
@@ -185,7 +196,7 @@ class ShootingGallery():
             cx = int(keypoint.pt[0])
             cy = int(keypoint.pt[1])
 # each next point is bigger, just to recognize them
-            pygame.draw.circle(screen, (100, 255, 255), (cx, cy), i+10, 5)
+            pygame.draw.circle(screen, (50, 150, 50), (cx, cy), i+10, 5)
 
             # cv2.circle(frame, (cx, cy), 10 + i,
             #            (100, 255, 255),
@@ -221,7 +232,16 @@ class ShootingGallery():
         sh = self.calibration_surface.calibim_gray.shape
         wframe[sh[0]:, :] = 0
         wframe[:, sh[1]:] = 0
+        # remove greeen chanel
+        # wframe[:, :, 1] = wframe[:, :, 2]
+        # use only red channel
+        # wframe[:, :, 0]= wframe[:,:, 0]
+        # wframe[:, :, 1]= copy.copy(wframe[:,:, 0])
+        # wframe[:, :, 2]= copy.copy(wframe[:,:, 0])
+        #
+        wframe = wframe[:,:, 0]
         return wframe, cframe
+
 
     def __blit_surf_or_frame(self, surf, frame):
         pos = (0, 0)
@@ -265,6 +285,7 @@ class ShootingGallery():
             deltat = self.clock.tick(25)                                  # omezení maximálního počtu snímků za sekundu
 
             wframe, cframe = self.__camera_image_processing(frame)
+            self.wframe = wframe
             self.event_processing()
 
             keypoints, det_img, lab_img = self.dot_detector.detect(
@@ -355,11 +376,11 @@ class ShootingGallery():
                 elif event.key == pygame.locals.K_KP9:
                     self.__prepare_scene(9)
                 elif event.key == pygame.locals.K_i:
-                    print self.cap.get(cv.CV_CAP_PROP_MODE)
-                    print self.cap.get(cv.CV_CAP_PROP_BRIGHTNESS)
-                    print self.cap.get(cv.CV_CAP_PROP_CONTRAST)
-                    print self.cap.get(cv.CV_CAP_PROP_SATURATION)
-                    print self.cap.get(cv.CV_CAP_PROP_GAIN)
+                    # print self.cap.get(cv.CV_CAP_PROP_MODE)
+                    # print self.cap.get(cv.CV_CAP_PROP_BRIGHTNESS)
+                    # print self.cap.get(cv.CV_CAP_PROP_CONTRAST)
+                    # print self.cap.get(cv.CV_CAP_PROP_SATURATION)
+                    # print self.cap.get(cv.CV_CAP_PROP_GAIN)
                     import ipdb; ipdb.set_trace() #  noqa BREAKPOINT
 
                 elif event.key == pygame.locals.K_d:
@@ -391,10 +412,13 @@ class ShootingGallery():
                     print 'calibration'
                     self.calib_blob()
                     # self.__prepare_scene(5)
+                elif event.key == pygame.locals.K_F11:
+                    print "toggle fullscreen"
+                    cameraio.toggle_fullscreen()
 
     def calib_blob(self):
         _, frame = self.cap.read()
-        cframe, wframe = self.__camera_image_processing(frame)
+        wframe, cframe= self.__camera_image_processing(frame)
         self.dot_detector.interactive_train(wframe, min_area_coeficient=0.6) #pts[0], pts[1])
 
     def calibration(self, interactive=True):
@@ -407,22 +431,20 @@ class ShootingGallery():
         
         self.aec.set_ref_image(frame)
         self.aec.set_area(20, 20)
+        self.clock.tick(500)                                  # omezení maximálního počtu snímků za sekundu
+        _, frame = self.cap.read()
+
         self.init_frame = self.calibration_surface.find_surface(frame)
         # get image with red point
+        _, frame = self.cap.read()
         _, frame = self.cap.read()
 
         if self.calibration_surface.Minv is None:
             frame_with_dot = frame
             print("Calibration failed")
         else:
-            frame_with_dot = cv2.warpPerspective(
-                    frame,
-                    self.calibration_surface.Minv, 
-                    tuple(self.config['resolution'])
-                    # (480, 480)
-                    # self.calibration_surface.calibim_gray.shape
-                    )# (480, 480))
-        plt.imshow(frame_with_dot)
+            frame_with_dot, cframe = self.__camera_image_processing(frame)
+        # plt.imshow(frame_with_dot)
         print "Klikněte na bod laseru a pak kamkoliv do ostatní plochy"
         
         self.dot_detector = bd.RedDotDetector()

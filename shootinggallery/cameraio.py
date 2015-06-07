@@ -20,6 +20,29 @@ import scipy
 import scipy.misc
 import cv
 
+def toggle_fullscreen():
+    screen = pygame.display.get_surface()
+    tmp = screen.convert()
+    caption = pygame.display.get_caption()
+    cursor = pygame.mouse.get_cursor()  # Duoas 16-04-2007 
+    
+    w,h = screen.get_width(),screen.get_height()
+    flags = screen.get_flags()
+    bits = screen.get_bitsize()
+    
+    pygame.display.quit()
+    pygame.display.init()
+    
+    screen = pygame.display.set_mode((w,h),flags^pygame.locals.FULLSCREEN,bits)
+    screen.blit(tmp,(0,0))
+    pygame.display.set_caption(*caption)
+ 
+    pygame.key.set_mods(0) #HACK: work-a-round for a SDL bug??
+ 
+    pygame.mouse.set_cursor( *cursor )  # Duoas 16-04-2007
+    
+    return screen
+
 def np2surf(pixels, transpose=True):
     import pygame
     import pygame.surfarray
@@ -42,7 +65,8 @@ def np2surf(pixels, transpose=True):
             px[:, :, 2] = pixels[:, :]
             pixels = px
         (width, height, colours) = pixels.shape
-        surf = pygame.display.set_mode((width, height))
+        surf = pygame.Surface((width, height))
+        # surf = pygame.display.set_mode((width, height))
         pygame.surfarray.blit_array(surf, pixels)
     return surf
 
@@ -71,6 +95,9 @@ class FrameGetter():
             if resolution is not None:
                 self.cap.set(cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
                 self.cap.set(cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
+            if True:
+                print "FPS ", self.cap.get(cv.CV_CAP_PROP_FPS)
+                self.cap.set(cv.CV_CAP_PROP_FPS, 10)
 
     def read(self):
         if self.useopencv:

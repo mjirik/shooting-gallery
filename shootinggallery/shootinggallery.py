@@ -74,7 +74,7 @@ def read_surf(infoin):
     return surface, info['offset']
 
 class GameModel():
-    def __init__(self, game_time=60, free=False):
+    def __init__(self, game_time=60, free=False, nshoots=10):
         self.state = 'waiting'
         if free:
             self.state = 'free'
@@ -83,6 +83,8 @@ class GameModel():
         self.time = 0
         self.game_time = game_time * 1000
         self.scoreboard_time = 10 * 1000
+        self.nshoots_max = nshoots
+        self.nshoots = nshoots
 
     def start(self):
         if self.state == 'waiting':
@@ -90,17 +92,20 @@ class GameModel():
             self.time = self.game_time
             self.score = 0
             self.prev_score = 0
+            self.nshoots = self.nshoots_max
 
     def add_score(self, score):
+        score = int(score)
         if self.state in ('running', 'free'):
             self.score += score
             self.prev_score = score
+            self.nshoots -= 1
         
 
     def update(self, deltat):
         if self.state == 'running':
             self.time -= deltat
-            if self.time < 0:
+            if self.time < 0 or self.nshoots <=0:
                 self.state = 'scoreboard'
                 self.time = self.scoreboard_time
 
@@ -109,17 +114,21 @@ class GameModel():
             if self.time < 0:
                 self.state = 'waiting'
                 self.time = 0 
+                self.nshoots = self.nshoots_max
 
     def get_status_text(self):
         if self.state == 'free':
-            status_text = "%.1f" % (self.prev_score)
+            # status_text = "%.2" % (self.prev_score)
+            status_text = "%i" % (int(self.prev_score))
         elif self.state == 'scoreboard':
             status_text = "Score: %i" %(int(self.score))
         else:
-            status_text = "%3d %2d %3d" %(
+            status_text = "%3d %2d %3d %2d" %(
                     int(self.score), 
                     int(self.prev_score),
-                    int(self.time / 1000))
+                    int(self.time / 1000),
+                    int(self.nshoots),
+                    )
         return status_text
 
 
@@ -293,7 +302,8 @@ class ShootingGallery():
         scene_config = {
                 'fontsize': 110,
                 'free_game': False,
-                'game_time': 60}
+                'game_time': 60, 
+                'nshoots': 5}
         scene_config.update(self.config['scenes'][i])
 
         self.background, self.background_offset = read_surf(scene_config['background'])
@@ -302,7 +312,8 @@ class ShootingGallery():
         self.targets.empty()
         self.elapsed = 0
         self.game = GameModel(free=scene_config['free_game'], 
-                              game_time=scene_config['game_time'])
+                              game_time=scene_config['game_time'], 
+                              nshoots=scene_config['nshoots'])
 
         # read_surf(
 
@@ -376,7 +387,15 @@ class ShootingGallery():
                     print 'calibration'
                     self.calibration()
                         
+                elif event.key == pygame.locals.K_b:
+                    print 'calibration'
+                    self.calib_blob()
                     # self.__prepare_scene(5)
+
+    def calib_blob(self):
+        _, frame = self.cap.read()
+        cframe, wframe = self.__camera_image_processing(frame)
+        self.dot_detector.interactive_train(wframe, min_area_coeficient=0.6) #pts[0], pts[1])
 
     def calibration(self, interactive=True):
         # get transformation

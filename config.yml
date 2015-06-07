@@ -8,6 +8,7 @@
 
 # target_file: "480pxTarget.bmp"
 calibration_image: "shootinggallery/imgs/480pxTarget.png"
+# calibration_image: "shootinggallery/imgs/480pxTarget_dark.png"
 # target_center: [320,240]
 # target_radius: 240
 # max_score: 10
@@ -23,7 +24,16 @@ targets: {
         'center': [512, 384],
         'radius': 384,
         'heading': None,
-        'max_score': 10.0,
+        'max_score': 10.5,
+        'vector': [0, 0],
+        'start': [515, 384],
+    },
+    'projector_target': {
+        'impath': "shootinggallery/imgs/480pxTarget_dark.png",
+        'center': [512, 384],
+        'radius': 384,
+        'heading': None,
+        'max_score': 10.5,
         'vector': [0, 0],
         'start': [515, 384],
     },
@@ -112,10 +122,10 @@ scenes: {
         'foreground': None,
         'offset': [0, 0],
         'zoom': 1.0,
-        'fontsize': 110,
+        'fontsize': 270,
         'game_time': 40,
         'targets':[{
-            'target_key': 'paper_target',
+            'target_key': 'projector_target',
             'start' : [10, 10],
             'mean_time': None,
         }]
